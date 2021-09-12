@@ -16,7 +16,9 @@ int bss_check()
 int getch()
 {
 	//Waits for a keyboard input and then returns.
-    ;
+    int ch;
+    while((ch = sbi_console_getchar()) == -1);
+    return ch;
 }
 
 int main(void)
@@ -30,17 +32,22 @@ int main(void)
     output_val[1] = version + '0';
     for (i = 0; i < sizeof(output_str); ++i) {
         buf[i] = output_str[i];
-	if (buf[i] == '_') {
-	    buf[i] = output_val[output_val_pos++];
-	}
+        if (buf[i] == '_') {
+            buf[i] = output_val[output_val_pos++];
+        }
     }
 
 	//print "Hello OS!"
-    
+    char *string = "Hello OS!\n";
+    sbi_console_putstr(string);
 	//print array buf which is expected to be "Version: 1"
-
+    sbi_console_putstr(buf);
     //fill function getch, and call getch here to receive keyboard input.
 	//print it out at the same time 
-
+    int ch;
+    while(1){
+        ch = getch();
+        sbi_console_putchar(ch);
+    }
     return 0;
 }

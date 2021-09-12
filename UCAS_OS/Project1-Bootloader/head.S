@@ -21,11 +21,22 @@ _start:
   .option pop
   
   /* Clear BSS for flat non-ELF images */
+  la t3, __bss_start
+  la t4, __BSS_END__
+  // if t3 >= BSS_END goto clear_done
+  bge t3, t4, clear_done
+clear:
+  sw zero, (t3)
+  add t3, t3, 4
+  // if t3 < BSS_END goto clear
+  blt t3, t4, clear
+clear_done:
 
   /* setup C environment (set sp register)*/
-
+  la sp, KERNEL_STACK
   /* Jump to the code in kernel.c*/
-
+ 
+  j main
 loop:
   wfi
   j loop

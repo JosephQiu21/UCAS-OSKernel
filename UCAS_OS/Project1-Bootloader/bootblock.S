@@ -24,13 +24,19 @@ main:
 	li a0, 10
 	SBI_CALL SBI_CONSOLE_PUTCHAR
 
-	// 1) task1 call BIOS print string "It's bootblock!"
+	// 1) task1 call BIOS print string "It's a bootloader..."
 	la a0, msg
 	SBI_CALL SBI_CONSOLE_PUTSTR
 	
-
 	// 2) task2 call BIOS read kernel in SD card and jump to kernel start
-	
+	// read SD card
+	la   s0, os_size_loc    // load address of section number
+	la   a0, kernel
+	lh   a1, 0(s0)
+	li   a2, 1
+	SBI_CALL SBI_SD_READ
+	// jump to kernel code
+	j    kernel_main
 	
 
 // while(1) --> stop here
