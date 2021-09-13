@@ -65,13 +65,13 @@ static void create_image(int nfiles, char *files[])
     Elf64_Ehdr ehdr;
     Elf64_Phdr phdr;
 
-    /* open the image file */
-
+    /* create a new image file */
+    img = fopen("image", "w+");
     /* for each input file */
     while (nfiles-- > 0) {
 
         /* open input file */
-
+        fp = fopen(*files, "r+");
         /* read ELF header */
         read_ehdr(&ehdr, fp);
         printf("0x%04lx: %s\n", ehdr.e_entry, *files);
@@ -92,26 +92,54 @@ static void create_image(int nfiles, char *files[])
     fclose(img);
 }
 
+// read ELF header 
 static void read_ehdr(Elf64_Ehdr * ehdr, FILE * fp)
 {
-    ;
+    fread(&ehdr, sizeof(Elf64_Ehdr), 1, fp);
 }
 
 static void read_phdr(Elf64_Phdr * phdr, FILE * fp, int ph,
                       Elf64_Ehdr ehdr)
 {
-    ;
+    fread(&phdr, sizeof(Elf64_Phdr), 1, fp + sizeof(Elf64_Ehdr) + ph * sizeof(Elf64_Phdr));
 }
 
 static void write_segment(Elf64_Ehdr ehdr, Elf64_Phdr phdr, FILE * fp,
                           FILE * img, int *nbytes, int *first)
 {
-    ;
+    if(*first == 1){
+        fwrite(fp + phdr.p_offset, phdr.p_filesz, 1, img);
+        fwrite(0, phdr.p_memsz - phdr.p_filesz, 1, img + phdr.p_filesz);
+        *first = 0;
+        *nbytes += 512;
+        if(options.extended){
+            printf("0x50200000: bootblock\n");
+            printf("\tsegment 0\n");
+            printf("\t\toffset 0x%041x\tvaddr 0x50200000\n", phdr.p_offset);
+            printf("\t\tfilesz 0x%041x\tmemsz 0x%041x\n", phdr.p_filesz, phdr.p_memsz);
+            printf("\t\twriting 0x%041x bytes\n", phdr.p_memsz);
+            printf("\t\tpadding up to 0x%041x\n", 512);
+            printf("0x50201000: kernel\n");
+        }
+    }else{
+        fwrite(fp + phdr.p_offset, phdr.p_filesz, 1, img + *nbytes);
+        fwrite(0, phdr.p_memsz - phdr.p_filesz, 1, img + *nbytes + phdr.p_filesz);
+        if(options.extended){
+            printf("\tsegment %d\n", *nbytes/512);
+            printf("\t\toffset 0x%041x\tvaddr 0x%081x\n", phdr.p_offset, 1344278528 + *nbytes);
+            printf("\t\tfilesz 0x%041x\tmemsz 0x%041x\n", phdr.p_filesz, phdr.p_memsz);
+            printf("\t\twriting 0x%041x bytes\n", phdr.p_memsz);
+            printf("\t\tpadding up to 0x%041x\n", 1024 + *nbytes);
+        }
+        *nbytes += 512;
+    }
+    printf("os_size: %d sectors\n", *nbytes);
 }
 
 static void write_os_size(int nbytes, FILE * img)
 {
-    ;
+    // write os size into the last 4 bytes of the 1st section
+    fwrite(&nbytes, 2, 1, img + 508);
 }
 
 /* print an error message and exit */
