@@ -36,7 +36,8 @@ clear_done:
   la sp, KERNEL_STACK
   /* Jump to the code in kernel.c*/
  
-  j main
+  la t1, main
+  jr t1
 loop:
   wfi
   j loop

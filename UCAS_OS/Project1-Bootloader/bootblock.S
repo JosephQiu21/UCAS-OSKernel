@@ -35,8 +35,11 @@ main:
 	lh   a1, 0(s0)
 	li   a2, 1
 	SBI_CALL SBI_SD_READ
+
+    fence.i
 	// jump to kernel code
-	j    kernel_main
+    la   t1, kernel_main
+	jr   t1
 	
 // while(1) --> stop here
 stop:
