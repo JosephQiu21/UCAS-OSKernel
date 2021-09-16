@@ -67,6 +67,8 @@ new:
 	lh   a1, 0(s0)
 	li   a2, 1
 	SBI_CALL SBI_SD_READ
+
+    fence.i
 	// jump to kernel code
     la   t5, kernel_main
     jr   t5

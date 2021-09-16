@@ -10,6 +10,9 @@
 .section ".entry_function","ax"
 .global _start
 _start:
+
+  fence
+  fence.i
   /* Mask all interrupts */
   csrw CSR_SIE, zero
   csrw CSR_SIP, zero
@@ -35,8 +38,8 @@ clear_done:
   /* setup C environment (set sp register)*/
   la sp, KERNEL_STACK
   /* Jump to the code in kernel.c*/
- 
-  j main
+  la t0, main
+  jr t0
 loop:
   wfi
   j loop
