@@ -38,7 +38,6 @@ main:
 	// jump to kernel code
 	j    kernel_main
 	
-
 // while(1) --> stop here
 stop:
 	j stop
