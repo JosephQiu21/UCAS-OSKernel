@@ -10,6 +10,9 @@
 .section ".entry_function","ax"
 .global _start
 _start:
+
+  fence
+  fence.i
   /* Mask all interrupts */
   csrw CSR_SIE, zero
   csrw CSR_SIP, zero

@@ -16,6 +16,11 @@
 .text
 .global main
 
+.option push
+.option norelax
+la gp, __global_pointer$
+.option pop
+
 main:
 	// fence on all memory and I/O
 	fence
