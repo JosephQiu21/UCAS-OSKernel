@@ -8,6 +8,7 @@
 
 以下只列出修改过的文件：
 
+```bash
 ├── A-core
 │   ├── bootblock.S
 │   ├── createimage.c
@@ -25,6 +26,7 @@
     ├── createimage.c
     ├── head.S
     ├── kernel.c	
+```
 
 ## S-core
 
