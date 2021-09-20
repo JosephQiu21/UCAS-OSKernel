@@ -133,9 +133,10 @@ static void write_segment(Elf64_Ehdr ehdr, Elf64_Phdr phdr, FILE * fp,
         printf("\t\tfilesz 0x%lx\t\tmemsz 0x%lx\n", phdr.p_filesz, phdr.p_memsz);
     }
 
-    // Read program header into buffer
+    // Read program file into buffer
     fseek(fp, phdr.p_offset, SEEK_SET);
     char *buffer = (char *)malloc(num_segment * 512 * sizeof(char));
+    memset(buffer, 0, num_segment * 512 * sizeof(char));
     fread(buffer, phdr.p_filesz, 1, fp);
 
     // Write buffer into image

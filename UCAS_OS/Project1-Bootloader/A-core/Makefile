@@ -18,8 +18,8 @@ kernel: kernel.c head.S riscv.lds
 createimage: createimage.c
 	${HOST_CC} createimage.c -o createimage -ggdb -Wall
 
-image: bootblock kernel createimage
-	./createimage --extended bootblock kernel
+image: bootblock createimage
+	./createimage --extended bootblock kernel_large_50200000
 
 clean:
 	rm -rf bootblock image kernel *.o createimage

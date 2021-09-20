@@ -21,8 +21,8 @@ kernel-B: kernel-B.c head.S riscv.lds
 createimage: createimage.c
 	${HOST_CC} createimage.c -o createimage -ggdb -Wall
 
-image: bootblock kernel-A kernel-B createimage
-	./createimage --extended bootblock kernel-A kernel-B
+image: bootblock kernel-A createimage
+	./createimage --extended bootblock kernel-A kernel_large_50200000 
 
 clean:
 	rm -rf bootblock image kernel *.o createimage

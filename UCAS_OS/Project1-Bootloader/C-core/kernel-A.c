@@ -37,7 +37,7 @@ int main(void)
         }
     }
 
-    char *string = "Hello, This is Kernel 0!\n";
+    char *string = "Hello, Qiu Haochen!\n";
     sbi_console_putstr(string);
 	//print array buf which is expected to be "Version: 1"
     sbi_console_putstr(buf);

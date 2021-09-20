@@ -81,6 +81,7 @@ get:
     beq a0, t1, readB
     j   get
 readA:
+    fence.i
 	// read kernel A
 	la   s0, os_size_loc    // load address of section number
 	la   a0, kernel
@@ -89,6 +90,7 @@ readA:
 	SBI_CALL SBI_SD_READ
     j code
 readB:
+    fence.i
     // read kernel B
     // os_size
     la   s0, os_size_loc
@@ -116,4 +118,4 @@ stop:
 .data
 
 msg: .string "It's a bootloader...\n"
-msg1: .string "Please choose kernel 0 or 1\n"
+msg1: .string "Please choose kernel \n0 - Text Input\n1 - 2048 Game\n"
