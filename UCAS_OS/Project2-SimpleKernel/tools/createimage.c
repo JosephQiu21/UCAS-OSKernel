@@ -9,6 +9,7 @@
 #define IMAGE_FILE "./image"
 #define ARGS "[--extended] [--vm] <bootblock> <executable-file> ..."
 
+#define OS_SIZE_LOC 0x01fc
 
 /* structure to store command line options */
 static struct {
@@ -60,24 +61,29 @@ int main(int argc, char **argv)
 
 static void create_image(int nfiles, char *files[])
 {
-    int ph, nbytes = 0, first = 1;
+    int ph = 0;     // Program header counter
+    int nbytes = 0; // Writing bytes counter
+    int first = 1;  // Segment counter
+    int is_bootblock = 1;
     FILE *fp, *img;
     Elf64_Ehdr ehdr;
     Elf64_Phdr phdr;
 
-    /* open the image file */
-
+    /* create a new image file */
+    img = fopen("image", "w+");
     /* for each input file */
     while (nfiles-- > 0) {
 
         /* open input file */
-
+        fp = fopen(*files, "r+");
         /* read ELF header */
         read_ehdr(&ehdr, fp);
         printf("0x%04lx: %s\n", ehdr.e_entry, *files);
 
         /* for each program header */
         for (ph = 0; ph < ehdr.e_phnum; ph++) {
+
+            printf("\tsegment %d\n", ph);
 
             /* read program header */
             read_phdr(&phdr, fp, ph, ehdr);
@@ -87,31 +93,71 @@ static void create_image(int nfiles, char *files[])
         }
         fclose(fp);
         files++;
+
+        // Write kernel size
+        if(!is_bootblock) write_os_size(nbytes, img);
+        else is_bootblock = 0;
+
+        nbytes = 0;
     }
-    write_os_size(nbytes, img);
     fclose(img);
 }
 
+// read ELF header 
 static void read_ehdr(Elf64_Ehdr * ehdr, FILE * fp)
 {
-    ;
+    if(!fread(ehdr, sizeof(Elf64_Ehdr), 1, fp)){
+        error("Warning: Format of input file is not ELF64\n");
+    }
 }
 
 static void read_phdr(Elf64_Phdr * phdr, FILE * fp, int ph,
                       Elf64_Ehdr ehdr)
 {
-    ;
+    fseek(fp, ehdr.e_phoff + ph * ehdr.e_phentsize, SEEK_SET);
+    if(!fread(phdr, sizeof(Elf64_Phdr), 1, fp)){
+        error("Warning: Fail to read program header\n");
+    }
 }
 
 static void write_segment(Elf64_Ehdr ehdr, Elf64_Phdr phdr, FILE * fp,
                           FILE * img, int *nbytes, int *first)
 {
-    ;
+    int num_segment = (phdr.p_filesz + 511)/512;    // Number of segments
+    if(options.extended){
+        printf("\t\toffset 0x%lx\t\tvaddr 0x%lx\n", phdr.p_offset, phdr.p_vaddr);
+        printf("\t\tfilesz 0x%lx\t\tmemsz 0x%lx\n", phdr.p_filesz, phdr.p_memsz);
+    }
+
+    // Read program header into buffer
+    fseek(fp, phdr.p_offset, SEEK_SET);
+    char *buffer = (char *)malloc(num_segment * 512 * sizeof(char));
+    memset(buffer, 0, num_segment * 512 * sizeof(char));
+    fread(buffer, phdr.p_filesz, 1, fp);
+
+    // Write buffer into image
+    fseek(img, (*first - 1) * 512, SEEK_SET);
+    fwrite(buffer, num_segment * 512, 1, img);
+
+    // Update nbytes and first
+    *nbytes += num_segment * 512;
+    *first += num_segment;
+ 
+    if(phdr.p_filesz && options.extended == 1){
+        printf("\t\twriting 0x%lx bytes\n", phdr.p_filesz);
+        printf("\t\tpadding up to 0x%x\n", (*first - 1) * 512);
+    }
+    
 }
 
 static void write_os_size(int nbytes, FILE * img)
 {
-    ;
+    // write os size into the last 4 bytes of the 1st segment
+    int kernel_size = nbytes/512;
+    fseek(img, OS_SIZE_LOC, SEEK_SET);
+    char buffer[2] = {kernel_size & 0xff, (kernel_size >> 8) & 0xff};
+    fwrite(buffer, 1, 2, img);
+    if(options.extended) printf("os_size: %d sectors\n", nbytes/512);
 }
 
 /* print an error message and exit */

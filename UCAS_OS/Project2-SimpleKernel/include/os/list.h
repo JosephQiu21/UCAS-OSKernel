@@ -40,12 +40,23 @@
 #include <type.h>
 
 // double-linked list
-//   TODO: use your own list design!!
 typedef struct list_node
 {
     struct list_node *next, *prev;
 } list_node_t;
 
 typedef list_node_t list_head;
+
+// Init list
+void list_init(list_head *list);
+
+// If a list is empty
+int is_list_empty(list_head *list);
+
+// Push a node into list tail
+void enqueue(list_head *list, list_node_t *item);
+
+// Pop a node from list head
+list_node_t * dequeue(list_head *list);
 
 #endif

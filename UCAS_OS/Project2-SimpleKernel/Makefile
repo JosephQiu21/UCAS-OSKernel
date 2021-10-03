@@ -6,7 +6,7 @@ CFLAGS = -O0  -fno-builtin -nostdlib -T riscv.lds -Wall -mcmodel=medany -Iinclud
 DISK = /dev/sdc
 
 BOOTLOADER_ENTRYPOINT = 0x50200000
-KERNEL_ENTRYPOINT = 0x50201000
+KERNEL_ENTRYPOINT = 0x50200000
 
 ARCH = riscv
 ARCH_DIR = ./arch/$(ARCH)
@@ -18,7 +18,7 @@ SRC_DRIVER	= ./drivers/screen.c
 SRC_INIT 	= ./init/main.c
 SRC_INT		= ./kernel/irq/irq.c
 SRC_LOCK	= ./kernel/locking/lock.c 
-SRC_SCHED	= ./kernel/sched/sched.c ./kernel/sched/time.c
+SRC_SCHED	= ./kernel/sched/sched.c ./kernel/sched/time.c ./kernel/sched/list.c
 SRC_MM	= ./kernel/mm/mm.c
 SRC_SYSCALL	= ./kernel/syscall/syscall.c
 SRC_LIBS	= ./libs/string.c ./libs/printk.c

@@ -1,4 +1,5 @@
 #include <sys/syscall.h>
+#include <screen.h>
 #include <stdint.h>
 
 void sys_sleep(uint32_t time)
@@ -8,7 +9,7 @@ void sys_sleep(uint32_t time)
 
 void sys_write(char *buff)
 {
-    // TODO:
+    port_write(buff);
 }
 
 void sys_reflush()
@@ -18,7 +19,7 @@ void sys_reflush()
 
 void sys_move_cursor(int x, int y)
 {
-    // TODO:
+    vt100_move_cursor(x, y);
 }
 
 long sys_get_timebase()
@@ -35,7 +36,5 @@ void sys_yield()
 {
     // TODO:
     // invoke_syscall(SYSCALL_YIELD, IGNORE, IGNORE, IGNORE);
-    //   or
-    // do_scheduler();
-    // ???
+    do_scheduler();
 }
