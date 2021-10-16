@@ -41,5 +41,6 @@ uint64_t get_ticks(void);
 extern uint64_t get_time_base();
 
 void latency(uint64_t time);
+void create_timer(uint64_t ticks);
 
 #endif

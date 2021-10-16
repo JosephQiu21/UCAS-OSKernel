@@ -27,3 +27,9 @@ list_node_t * dequeue(list_head *list){
     list -> next -> prev = list;
     return data;
 }
+
+void delete_item(list_node_t *item){
+    item -> prev -> next = item -> next;
+    item -> next -> prev = item -> prev;
+    item -> prev = item -> next = NULL;
+}

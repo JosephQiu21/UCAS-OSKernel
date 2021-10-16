@@ -1,9 +1,10 @@
 #include <os/time.h>
 #include <os/mm.h>
 #include <os/irq.h>
+#include <os/sched.h>
 #include <type.h>
 
-LIST_HEAD(timers);
+LIST_HEAD(sleep_queue);
 
 uint64_t time_elapsed = 0;
 uint32_t time_base = 0;
@@ -16,6 +17,7 @@ uint64_t get_ticks()
     return time_elapsed;
 }
 
+// Get current time
 uint64_t get_timer()
 {
     return get_ticks() / time_base;
@@ -32,4 +34,29 @@ void latency(uint64_t time)
 
     while (get_timer() - begin_time < time);
     return;
+}
+
+// Create a timer for current_running process
+void create_timer(uint64_t ticks)
+{
+    disable_preempt();
+    current_running -> timeout_ticks = get_ticks() + ticks;
+    enqueue(&sleep_queue, &(current_running -> list));
+    enable_preempt();
+}
+
+// Check through the sleep queue 
+// to see if any of them should be waked up
+void check_timer()
+{
+    disable_preempt();
+    pcb_t *tmp;
+    list_node_t *p = sleep_queue.next;
+    while(!is_list_empty(&sleep_queue) && (p != &sleep_queue)){
+        tmp = container_of(p, pcb_t, list);
+        if(get_ticks() >= tmp -> timeout_ticks)
+            do_unblock(p);  // Wake up
+        p = p -> next;
+    }
+    enable_preempt();
 }

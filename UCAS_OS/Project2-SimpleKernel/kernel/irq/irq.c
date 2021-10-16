@@ -13,19 +13,20 @@ uintptr_t riscv_dtb;
 
 void reset_irq_timer()
 {
-    // TODO clock interrupt handler.
-    // TODO: call following functions when task4
-    // screen_reflush();
-    // timer_check();
-
+    screen_reflush();
+    check_timer();
     // note: use sbi_set_timer
+    sbi_set_timer(get_ticks() + get_time_base() / 500);
     // remember to reschedule
+    do_scheduler();
 }
 
 void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t cause)
 {
-    // TODO interrupt handler.
     // call corresponding handler by the value of `cause`
+    handler_t *table = (cause >> 63)? irq_table : exc_table;
+    uint64_t exec_code = cause & ~(1 << 63);
+    table[exec_code](regs, stval, cause);
 }
 
 void handle_int(regs_context_t *regs, uint64_t interrupt, uint64_t cause)
@@ -36,8 +37,11 @@ void handle_int(regs_context_t *regs, uint64_t interrupt, uint64_t cause)
 void init_exception()
 {
     /* initialize irq_table and exc_table */
-    /* note: handle_int, handle_syscall, handle_other, etc.*/
-
+    int i;
+    for (i = 0; i < IRQC_COUNT; i++) irq_table[i] = &handle_other;
+    for (i = 0; i < EXCC_COUNT; i++) exc_table[i] = &handle_other;
+    irq_table[IRQC_S_TIMER] = &handle_int;
+    exc_table[EXCC_SYSCALL] = &handle_syscall;
     setup_exception();
 }
 

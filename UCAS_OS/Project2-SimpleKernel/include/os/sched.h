@@ -96,6 +96,9 @@ typedef struct pcb
     /* cursor position */
     int cursor_x;
     int cursor_y;
+
+    /* Timer */
+    uint64_t timeout_ticks;
 } pcb_t;
 
 /* task information, used to init PCB */
@@ -107,6 +110,7 @@ typedef struct task_info
 
 /* ready queue to run */
 extern list_head ready_queue;
+extern list_head sleep_queue;
 
 /* current running task PCB */
 extern pcb_t * volatile current_running;

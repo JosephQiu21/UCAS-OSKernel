@@ -39,10 +39,11 @@
 
 // #define LOCK_TEST
 // #define SCHEDULE_TEST
+#define TIMER_TEST
 
 extern void ret_from_exception();
 extern void __global_pointer$();
-list_head ready_queue, block_queue;
+list_head ready_queue, block_queue, sleep_queue;
 
 static void init_pcb_stack(
     ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point,
@@ -77,6 +78,7 @@ static void init_pcb()
 {
     int i;
     list_init(&ready_queue);
+    list_init(&sleep_queue);
 
     // initialize pcb using task info
     task_info_t *task;
@@ -93,6 +95,13 @@ static void init_pcb()
     {
         task = lock_tasks[i];
     #endif
+
+    #ifdef TIMER_TEST
+    for (i = 0; i < num_timer_tasks; i++)
+    {
+        task = timer_tasks[i];
+    #endif
+
         // Alloc stack
         pcb[i].kernel_sp = allocPage(1);
         pcb[i].user_sp = allocPage(1);
@@ -107,9 +116,21 @@ static void init_pcb()
     current_running = &pid0_pcb;
 }
 
+void error_syscall(void){
+    printk("> Undefined syscall.\n\r");
+}
+
 static void init_syscall(void)
 {
     // initialize system call table.
+    for (int i = 0; i < NUM_SYSCALLS; i++) syscall[i] = &error_syscall;
+    syscall[SYSCALL_SLEEP       ] = &do_sleep;
+    syscall[SYSCALL_WRITE       ] = &screen_write;
+    syscall[SYSCALL_CURSOR      ] = &screen_move_cursor;
+    syscall[SYSCALL_REFLUSH     ] = &screen_reflush;
+    syscall[SYSCALL_GET_TIMEBASE] = &get_time_base;
+    syscall[SYSCALL_GET_TICK    ] = &get_ticks;
+    syscall[SYSCALL_YIELD       ] = &do_scheduler;
 }
 
 // jump from bootloader.
@@ -128,8 +149,8 @@ int main()
     printk("> [INIT] Interrupt processing initialization succeeded.\n\r");
 
     // init system call table (0_0)
-    // init_syscall();
-    // printk("> [INIT] System call initialized successfully.\n\r");
+    init_syscall();
+    printk("> [INIT] System call initialized successfully.\n\r");
 
     // fdt_print(riscv_dtb);
 

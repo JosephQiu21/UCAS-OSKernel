@@ -8,11 +8,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define offsetof(type, member) (size_t)&(((type*)0)->member)
-#define container_of(ptr, type, member) ({ \
-     const typeof( ((type *)0)->member ) *__mptr = (ptr); \
-     (type *)( (char *)__mptr - offsetof(type,member) );})
-
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
 pcb_t pid0_pcb = {
@@ -58,8 +53,11 @@ void do_sleep(uint32_t sleep_time)
     // TODO: sleep(seconds)
     // note: you can assume: 1 second = `timebase` ticks
     // 1. block the current_running
+    current_running -> status = TASK_BLOCKED;
     // 2. create a timer which calls `do_unblock` when timeout
+    create_timer(sleep_time * time_base);
     // 3. reschedule because the current_running is blocked.
+    do_scheduler();
 }
 
 void do_block(list_node_t *pcb_node, list_head *queue)
@@ -73,6 +71,7 @@ void do_unblock(list_node_t *pcb_node)
 {
     // Unblock the `pcb` from the block queue
     pcb_t *task = container_of(pcb_node, pcb_t, list);
+    delete_item(pcb_node);
     task -> status = TASK_READY;
     enqueue(&ready_queue, &(task -> list));
 }

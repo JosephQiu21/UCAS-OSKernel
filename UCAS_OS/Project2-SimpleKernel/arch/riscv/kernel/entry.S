@@ -2,15 +2,16 @@
 #include <csr.h>
 
 .macro SAVE_CONTEXT
+  // Exchange tp and CSR_SSCRATCH
+  // csrrw tp, CSR_SSCRATCH, tp
 
-  sd sp, PCB_USER_SP(tp)
-  ld sp, PCB_KERNEL_SP(tp)
+  sd sp, PCB_USER_SP(tp)        // Save current sp to user stack
+  ld sp, PCB_KERNEL_SP(tp)      // Load kernal stack pointer
   addi sp, sp, SWITCH_TO_SIZE
 
   // Save all general purpose registers
   sd ra, OFFSET_REG_RA(sp)
   sd gp, OFFSET_REG_GP(sp)
-  sd t0, OFFSET_REG_T0(sp)
   sd t1, OFFSET_REG_T1(sp)
   sd t2, OFFSET_REG_T2(sp)
   sd s0, OFFSET_REG_S0(sp)
@@ -37,6 +38,10 @@
   sd t4, OFFSET_REG_T4(sp)
   sd t5, OFFSET_REG_T5(sp)
   sd t6, OFFSET_REG_T6(sp)
+  ld t0, PCB_USER_SP(tp)
+  sd t0, OFFSET_REG_SP(sp)
+  sd t0, OFFSET_REG_T0(sp)
+
   /*
    * Disable user-mode memory access as it should only be set in the
    * actual user copy routines.
@@ -44,15 +49,28 @@
    * Disable the FPU to detect illegal usage of floating point in kernel
    * space.
    */
+  li t0, SR_SUM | SR_FS
+
+   /* save sstatus, sepc, stval, scause and sscratch on user stack */
+  csrrc  s0, CSR_SSTATUS, t0
+  sd    s0, OFFSET_REG_SSTATUS(sp)
+  csrr  s0, CSR_STVAL
+  csrr  s1, CSR_SEPC
+  csrr  s2, CSR_SCAUSE
+  sd    s0, OFFSET_REG_SBADADDR(sp)
+  sd    s1, OFFSET_REG_SEPC(sp)
+  sd    s2, OFFSET_REG_SCAUSE(sp)
+  addi sp, sp, -(SWITCH_TO_SIZE)
 
 .endm
 
 .macro RESTORE_CONTEXT
   // Restore general purpose registers
+  ld sp, PCB_KERNEL_SP(tp)
+  addi sp, sp, SWITCH_TO_SIZE
   ld ra, OFFSET_REG_RA(sp)
   ld gp, OFFSET_REG_GP(sp)
-  ld t0, OFFSET_REG_T0(sp)
-  ld t1, OFFSET_REG_T1(sp)
+  
   ld t2, OFFSET_REG_T2(sp)
   ld s0, OFFSET_REG_S0(sp)
   ld s1, OFFSET_REG_S1(sp)
@@ -78,7 +96,37 @@
   ld t4, OFFSET_REG_T4(sp)
   ld t5, OFFSET_REG_T5(sp)
   ld t6, OFFSET_REG_T6(sp)
+  ld t0, OFFSET_REG_SSTATUS(sp)
+  ld t1, OFFSET_REG_SEPC(sp)
+  csrw CSR_SSTATUS, t0
+  csrw CSR_SEPC, t1
+  ld t0, OFFSET_REG_T0(sp)
+  ld t1, OFFSET_REG_T1(sp)
 .endm
+
+ENTRY(enable_preempt)
+  ld t1, current_running
+  ld t0, PCB_PREEMPT_COUNT(t1)
+  beq t0, zero, do_enable
+  addi t0, t0, -1
+  sd t0, PCB_PREEMPT_COUNT(t1)
+  beq t0, zero, do_enable
+  jr ra
+do_enable:
+  not t0, x0
+  csrs CSR_SIE, t0
+
+  jr ra
+ENDPROC(enable_preempt)
+
+ENTRY(disable_preempt)
+  csrw CSR_SIE, zero
+  ld t1, current_running
+  ld t0, PCB_PREEMPT_COUNT(t1)
+  addi t0, t0, 1
+  sd t0, PCB_PREEMPT_COUNT(t1)
+  jr ra
+ENDPROC(disable_preempt)
 
 ENTRY(enable_interrupt)
   li t0, SR_SIE
@@ -158,15 +206,14 @@ ENTRY(exception_handler_entry)
    * so that we can return to ret_from_exception
    * when interrupt_help complete.
    */
-   ld a0, PCB_KERNEL_SP
+   la ra, ret_from_exception
+
+   /* call interrupt_helper */
+   ld a0, PCB_KERNEL_SP(tp)
    addi a0, a0, SWITCH_TO_SIZE
    csrr a1, CSR_STVAL
    csrr a2, CSR_SCAUSE
    call interrupt_helper
-   la ra, ret_from_exception
-   ja ra
-
-  /* TODO: call interrupt_helper
-   * note: don't forget to pass parameters for it.
-   */
+   
+   jr ra
 ENDPROC(exception_handler_entry)
