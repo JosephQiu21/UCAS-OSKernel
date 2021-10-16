@@ -37,7 +37,7 @@
 #include <test.h>
 #include <csr.h>
 
-#define LOCK_TEST
+// #define LOCK_TEST
 // #define SCHEDULE_TEST
 
 extern void ret_from_exception();
@@ -121,11 +121,11 @@ int main()
     printk("> [INIT] PCB initialization succeeded.\n\r");
 
     // read CPU frequency
-    // time_base = sbi_read_fdt(TIMEBASE);
+    time_base = sbi_read_fdt(TIMEBASE);
 
     // init interrupt (^_^)
-    // init_exception();
-    // printk("> [INIT] Interrupt processing initialization succeeded.\n\r");
+    init_exception();
+    printk("> [INIT] Interrupt processing initialization succeeded.\n\r");
 
     // init system call table (0_0)
     // init_syscall();

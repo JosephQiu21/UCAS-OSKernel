@@ -2,23 +2,10 @@
 #include <csr.h>
 
 .macro SAVE_CONTEXT
-  .local _restore_kernel_tpsp
-  .local _save_context
-  /*
-   * If coming from userspace, preserve the user thread pointer and load
-   * the kernel thread pointer.  If we came from the kernel, sscratch
-   * will contain 0, and we should continue on the current TP.
-   */
-  csrrw tp, CSR_SSCRATCH, tp
-  bnez tp, _save_context
 
-_restore_kernel_tpsp:
-  csrr tp, CSR_SSCRATCH
-  sd sp, PCB_KERNEL_SP(tp)
-_save_context:
   sd sp, PCB_USER_SP(tp)
   ld sp, PCB_KERNEL_SP(tp)
-  addi sp, sp, -(OFFSET_SIZE)
+  addi sp, sp, SWITCH_TO_SIZE
 
   // Save all general purpose registers
   sd ra, OFFSET_REG_RA(sp)
@@ -58,30 +45,9 @@ _save_context:
    * space.
    */
 
-  li t0, SR_SUM | SR_FS
-
-  // Save sstatus, sepc, stval, scause and sscratch on user stack
-  sd    s1, OFFSET_REG_SSTATUS(sp)
-  csrr  s0, CSR_STVAL
-  csrr  s1, CSR_SEPC
-  csrr  s2, CSR_SCAUSE
-  sd    s0, OFFSET_REG_SBADADDR(sp)
-  sd    s1, OFFSET_REG_SEPC(sp)
-  sd    s2, OFFSET_REG_SCAUSE(sp)
-  addi sp, sp, -(SWITCH_TO_SIZE)
-
-
 .endm
 
 .macro RESTORE_CONTEXT
-  // Restore Supervisor-Level regs
-  ld   sp, PCB_KERNEL_SP(tp)
-  addi sp, sp, SWITCH_TO_SIZE
-  ld   s0, OFFSET_REG_SSTATUS(sp)
-  ld   s1, OFFSET_REG_SEPC(sp)
-  csrw CSR_SSTATUS, s0
-  csrw CSR_SEPC, s1
-
   // Restore general purpose registers
   ld ra, OFFSET_REG_RA(sp)
   ld gp, OFFSET_REG_GP(sp)
@@ -172,7 +138,9 @@ ENTRY(switch_to)
 ENDPROC(switch_to)
 
 ENTRY(ret_from_exception)
-  /* TODO: */
+    RESTORE_CONTEXT
+    csrw CSR_SSCRATCH, tp
+    sret
 ENDPROC(ret_from_exception)
 
 ENTRY(exception_handler_entry)
@@ -186,10 +154,17 @@ ENTRY(exception_handler_entry)
   la gp, __global_pointer$
   .option pop
 
-  /* TODO: load ret_from_exception into $ra
+  /* load ret_from_exception into $ra
    * so that we can return to ret_from_exception
    * when interrupt_help complete.
    */
+   ld a0, PCB_KERNEL_SP
+   addi a0, a0, SWITCH_TO_SIZE
+   csrr a1, CSR_STVAL
+   csrr a2, CSR_SCAUSE
+   call interrupt_helper
+   la ra, ret_from_exception
+   ja ra
 
   /* TODO: call interrupt_helper
    * note: don't forget to pass parameters for it.

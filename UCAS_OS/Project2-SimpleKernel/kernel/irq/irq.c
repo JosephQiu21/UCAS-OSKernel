@@ -35,7 +35,7 @@ void handle_int(regs_context_t *regs, uint64_t interrupt, uint64_t cause)
 
 void init_exception()
 {
-    /* TODO: initialize irq_table and exc_table */
+    /* initialize irq_table and exc_table */
     /* note: handle_int, handle_syscall, handle_other, etc.*/
 
     setup_exception();
