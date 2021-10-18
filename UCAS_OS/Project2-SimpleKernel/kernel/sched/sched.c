@@ -27,6 +27,8 @@ pid_t process_id = 1;
 
 void do_scheduler(void)
 {
+    // Check sleep queue to wake up
+    check_timer();
     // Modify the current_running pointer.
     if(!is_list_empty(&ready_queue)){
         pcb_t *next_running = container_of(dequeue(&ready_queue), pcb_t, list);

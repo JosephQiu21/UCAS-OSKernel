@@ -20,9 +20,11 @@ char old_screen[SCREEN_HEIGHT * SCREEN_WIDTH] = {0};
 void vt100_move_cursor(int x, int y)
 {
     // \033[y;xH
+    disable_preempt();
     printk("%c[%d;%dH", 27, y, x);
     current_running->cursor_x = x;
     current_running->cursor_y = y;
+    enable_preempt();
 }
 
 /* clear screen */
@@ -94,6 +96,7 @@ void screen_write(char *buff)
     {
         screen_write_ch(buff[i]);
     }
+    screen_reflush();
 }
 
 /*

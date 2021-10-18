@@ -39,7 +39,11 @@
 
 // #define LOCK_TEST
 // #define SCHEDULE_TEST
-#define TIMER_TEST
+// #define TIMER_TEST
+#define INTERRUPT_TEST
+
+#define INTERRUPT
+//#define NONPREEMPT
 
 extern void ret_from_exception();
 extern void __global_pointer$();
@@ -57,6 +61,12 @@ static void init_pcb_stack(
     {
         pt_regs -> regs[i] = 0;
     }
+    pt_regs -> regs[2] = user_stack;
+    pt_regs -> regs[3] = (reg_t)__global_pointer$;
+    pt_regs -> sepc = entry_point;
+    pt_regs -> sstatus = 0;
+    pt_regs -> scause = 0;
+    pt_regs -> sbadaddr = 0;
 
     // Update kernel_sp in pcb
     pcb -> kernel_sp = kernel_stack - sizeof(regs_context_t) - sizeof(switchto_context_t);
@@ -65,7 +75,7 @@ static void init_pcb_stack(
     switchto_context_t *st_regs = (switchto_context_t *)pcb -> kernel_sp;
 
     // Set ra & sp
-    st_regs -> regs[0] = entry_point;
+    st_regs -> regs[0] = &ret_from_exception;
     st_regs -> regs[1] = user_stack;
     for (i = 2; i < 14; i++)
     {
@@ -100,6 +110,12 @@ static void init_pcb()
     for (i = 0; i < num_timer_tasks; i++)
     {
         task = timer_tasks[i];
+    #endif
+
+    #ifdef INTERRUPT_TEST
+    for (i = 0; i < num_sched2_tasks + num_lock2_tasks; i++)
+    {
+        task = (i < num_sched2_tasks)? sched2_tasks[i] : lock2_tasks[i - num_sched2_tasks];
     #endif
 
         // Alloc stack
@@ -160,15 +176,23 @@ int main()
 
     // TODO:
     // Setup timer interrupt and enable all interrupt
+#ifdef INTERRUPT
+    sbi_set_timer(get_ticks() + get_time_base() / 500);
+#endif
 
     while (1)
     {
         // (QAQQQQQQQQQQQ)
         // If you do non-preemptive scheduling, you need to use it
         // to surrender control do_scheduler();
-        // enable_interrupt();
-        // __asm__ __volatile__("wfi\n\r":::);
+#ifdef INTERRUPT
+        enable_interrupt();
+        __asm__ __volatile__("wfi\n\r":::);
+#endif
+
+#ifdef NONPREEMPT
         do_scheduler();
+#endif
     };
     return 0;
 }

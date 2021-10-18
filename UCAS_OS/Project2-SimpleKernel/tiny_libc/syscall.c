@@ -34,5 +34,5 @@ long sys_get_tick()
 
 void sys_yield()
 {
-    return invoke_syscall(SYSCALL_YIELD, IGNORE, IGNORE, IGNORE);
+    invoke_syscall(SYSCALL_YIELD, IGNORE, IGNORE, IGNORE);
 }

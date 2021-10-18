@@ -2,8 +2,6 @@
 #include <csr.h>
 
 .macro SAVE_CONTEXT
-  // Exchange tp and CSR_SSCRATCH
-  // csrrw tp, CSR_SSCRATCH, tp
 
   sd sp, PCB_USER_SP(tp)        // Save current sp to user stack
   ld sp, PCB_KERNEL_SP(tp)      // Load kernal stack pointer
@@ -102,6 +100,7 @@
   csrw CSR_SEPC, t1
   ld t0, OFFSET_REG_T0(sp)
   ld t1, OFFSET_REG_T1(sp)
+  ld sp, PCB_USER_SP(tp)
 .endm
 
 ENTRY(enable_preempt)
@@ -187,7 +186,6 @@ ENDPROC(switch_to)
 
 ENTRY(ret_from_exception)
     RESTORE_CONTEXT
-    csrw CSR_SSCRATCH, tp
     sret
 ENDPROC(ret_from_exception)
 
@@ -206,7 +204,6 @@ ENTRY(exception_handler_entry)
    * so that we can return to ret_from_exception
    * when interrupt_help complete.
    */
-   la ra, ret_from_exception
 
    /* call interrupt_helper */
    ld a0, PCB_KERNEL_SP(tp)
@@ -214,6 +211,6 @@ ENTRY(exception_handler_entry)
    csrr a1, CSR_STVAL
    csrr a2, CSR_SCAUSE
    call interrupt_helper
-   
+   la ra, ret_from_exception
    jr ra
 ENDPROC(exception_handler_entry)

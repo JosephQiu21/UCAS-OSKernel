@@ -17,6 +17,7 @@ void sleep_task(void)
             sys_move_cursor(1, print_location);
             printf("> [TASK] This task is to test sleep(). (%d)\n", i);
             sys_sleep(1);
+            // sys_yield();
         }
 
         sys_move_cursor(1, print_location);
