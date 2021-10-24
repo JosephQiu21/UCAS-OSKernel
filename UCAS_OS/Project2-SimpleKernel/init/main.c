@@ -40,8 +40,8 @@
 
 // #define LOCK_TEST
 // #define SCHEDULE_TEST
-// #define TIMER_TEST
-#define INTERRUPT_TEST
+#define TIMER_TEST
+// #define INTERRUPT_TEST
 
 #define INTERRUPT
 //#define NONPREEMPT
@@ -62,6 +62,7 @@ static void init_pcb_stack(
     {
         pt_regs -> regs[i] = 0;
     }
+    
     pt_regs -> regs[2] = user_stack;
     pt_regs -> regs[3] = (reg_t)__global_pointer$;
     pt_regs -> sepc = entry_point;
@@ -150,6 +151,7 @@ static void init_syscall(void)
     syscall[SYSCALL_YIELD       ] = &do_scheduler;
     syscall[SYSCALL_MUTEX_GET   ] = &mutex_get;
     syscall[SYSCALL_MUTEX_OP    ] = &mutex_op;
+    syscall[SYSCALL_GET_WALL    ] = &get_wall_time;  
 }
 
 // jump from bootloader.

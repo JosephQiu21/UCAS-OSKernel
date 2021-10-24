@@ -17,6 +17,12 @@ uint64_t get_ticks()
     return time_elapsed;
 }
 
+uint32_t get_wall_time(uint32_t *time_elapsed)
+{
+    *time_elapsed = get_ticks();
+    return get_time_base();
+}
+
 // Get current time
 uint64_t get_timer()
 {

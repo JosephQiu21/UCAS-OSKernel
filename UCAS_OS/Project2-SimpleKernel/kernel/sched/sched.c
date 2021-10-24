@@ -27,6 +27,7 @@ pid_t process_id = 1;
 
 void do_scheduler(void)
 {
+    __asm__ __volatile__("csrr x0, sscratch\n");
     // Check sleep queue to wake up
     check_timer();
     // Modify the current_running pointer.

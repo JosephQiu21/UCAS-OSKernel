@@ -8,6 +8,7 @@ static int id = 0;
 
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
+    __asm__ __volatile__("csrr x0, sscratch\n");
     list_init(&(lock -> block_queue));
     lock -> status = UNLOCKED;
 }

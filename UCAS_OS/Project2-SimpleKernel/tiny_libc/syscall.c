@@ -46,3 +46,8 @@ void sys_mutex_op(int id, int op)
 {
     invoke_syscall(SYSCALL_MUTEX_OP, id, op, IGNORE);
 }
+
+uint32_t sys_get_wall_time(uint32_t *time_elapsed)
+{
+    return invoke_syscall(SYSCALL_GET_WALL, time_elapsed, IGNORE, IGNORE);
+}
