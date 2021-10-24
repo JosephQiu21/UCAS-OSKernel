@@ -3,8 +3,6 @@
 #include <sys/syscall.h>
 #include <os/lock.h>
 
-int mutex_get(int key);
-
 void mthread_mutex_init(void* handle)
 {
     int *id = (int *)handle;

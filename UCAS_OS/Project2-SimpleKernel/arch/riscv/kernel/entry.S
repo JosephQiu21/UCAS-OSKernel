@@ -135,7 +135,7 @@ ENDPROC(enable_interrupt)
 
 ENTRY(disable_interrupt)
   li t0, SR_SIE
-  csrs CSR_SSTATUS, t0
+  csrc CSR_SSTATUS, t0
   jr ra
 ENDPROC(disable_interrupt)
 

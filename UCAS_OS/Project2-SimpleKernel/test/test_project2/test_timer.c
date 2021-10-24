@@ -5,7 +5,7 @@
 
 void timer_task(void)
 {
-    __asm__ __volatile__("csrr x0, sscratch\n");
+    // __asm__ __volatile__("csrr x0, sscratch\n");
     int print_location = 2;
 
     while (1)
