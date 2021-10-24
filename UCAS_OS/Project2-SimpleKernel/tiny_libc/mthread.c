@@ -1,19 +1,24 @@
 #include <stdatomic.h>
 #include <mthread.h>
 #include <sys/syscall.h>
+#include <os/lock.h>
 
-int mthread_mutex_init(void* handle)
+int mutex_get(int key);
+
+void mthread_mutex_init(void* handle)
 {
-    sys_lock_init(&((mthread_mutex_t *)handle) -> mlock);
-    return 0;
+    int *id = (int *)handle;
+    *id = sys_mutex_get((int)handle);
 }
-int mthread_mutex_lock(void* handle) 
+void mthread_mutex_lock(void* handle) 
 {
-    sys_lock_acquire(&((mthread_mutex_t *)handle) -> mlock);
-    return 0;
+    int *id = (int *)handle;
+    *id = sys_mutex_get((int)handle);
+    sys_mutex_op(*id, LOCK);
 }
-int mthread_mutex_unlock(void* handle)
+void mthread_mutex_unlock(void* handle)
 {
-    sys_lock_release(&((mthread_mutex_t *)handle) -> mlock);
-    return 0;
+    int *id = (int *)handle;
+    *id = sys_mutex_get((int)handle);
+    sys_mutex_op(*id, UNLOCK);
 }

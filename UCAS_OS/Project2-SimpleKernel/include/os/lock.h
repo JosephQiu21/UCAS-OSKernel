@@ -29,32 +29,28 @@
 #define INCLUDE_LOCK_H_
 
 #include <os/list.h>
+enum lock_op{
+    LOCK,
+    UNLOCK
+};
 
 typedef enum {
     UNLOCKED,
     LOCKED,
 } lock_status_t;
 
-typedef struct spin_lock
-{
-    volatile lock_status_t status;
-} spin_lock_t;
-
 typedef struct mutex_lock
 {
-    spin_lock_t lock;
+    volatile lock_status_t status;
     list_head block_queue;
-    int id;
 } mutex_lock_t;
 
 /* init lock */
-void spin_lock_init(spin_lock_t *lock);
-int spin_lock_try_acquire(spin_lock_t *lock);
-void spin_lock_acquire(spin_lock_t *lock);
-void spin_lock_release(spin_lock_t *lock);
-
 void do_mutex_lock_init(mutex_lock_t *lock);
 void do_mutex_lock_acquire(mutex_lock_t *lock);
 void do_mutex_lock_release(mutex_lock_t *lock);
 
+int mutex_get(int key);
+int mutex_op(int handle, int op);
+int fetchhash(int key);
 #endif

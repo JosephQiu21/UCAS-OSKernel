@@ -35,13 +35,10 @@
 #define EBUSY  1 /* the lock is busy(for example, it is locked by another thread) */
 #define EINVAL 2 /* the lock is invalid */
 
-typedef struct mthread_mutex
-{
-    mutex_lock_t mlock;
-} mthread_mutex_t;
+typedef int mthread_mutex_t;
 
-int mthread_mutex_init(void* handle);
-int mthread_mutex_lock(void* handle);
-int mthread_mutex_unlock(void* handle);
+void mthread_mutex_init(void* handle);
+void mthread_mutex_lock(void* handle);
+void mthread_mutex_unlock(void* handle);
 
 #endif

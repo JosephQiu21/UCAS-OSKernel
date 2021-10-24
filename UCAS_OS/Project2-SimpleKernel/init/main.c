@@ -148,9 +148,8 @@ static void init_syscall(void)
     syscall[SYSCALL_GET_TIMEBASE] = &get_time_base;
     syscall[SYSCALL_GET_TICK    ] = &get_ticks;
     syscall[SYSCALL_YIELD       ] = &do_scheduler;
-    syscall[SYSCALL_LOCK_INIT   ] = &do_mutex_lock_init;
-    syscall[SYSCALL_LOCK_ACQUIRE] = &do_mutex_lock_acquire;
-    syscall[SYSCALL_LOCK_RELEASE] = &do_mutex_lock_release;
+    syscall[SYSCALL_MUTEX_GET   ] = &mutex_get;
+    syscall[SYSCALL_MUTEX_OP    ] = &mutex_op;
 }
 
 // jump from bootloader.
