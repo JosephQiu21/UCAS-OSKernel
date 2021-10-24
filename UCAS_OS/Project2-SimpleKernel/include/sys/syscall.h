@@ -44,4 +44,8 @@ long sys_get_tick();
 
 void sys_yield();
 
+void sys_lock_init(uint64_t);
+void sys_lock_acquire(uint64_t);
+void sys_lock_releaese(uint64_t);
+
 #endif

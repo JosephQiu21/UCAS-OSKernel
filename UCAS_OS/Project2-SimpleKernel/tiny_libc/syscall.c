@@ -36,3 +36,18 @@ void sys_yield()
 {
     invoke_syscall(SYSCALL_YIELD, IGNORE, IGNORE, IGNORE);
 }
+
+void sys_lock_init(uint64_t lock)
+{
+    invoke_syscall(SYSCALL_LOCK_INIT, lock, IGNORE, IGNORE);
+}
+
+void sys_lock_acqure(uint64_t lock)
+{
+    invoke_syscall(SYSCALL_LOCK_ACQUIRE, lock, IGNORE, IGNORE);
+}
+
+void sys_lock_release(uint64_t lock)
+{
+    invoke_syscall(SYSCALL_LOCK_RELEASE, lock, IGNORE, IGNORE);
+}

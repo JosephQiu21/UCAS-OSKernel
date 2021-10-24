@@ -33,6 +33,7 @@
 #include <sbi.h>
 #include <stdio.h>
 #include <os/time.h>
+#include <os/lock.h>
 #include <os/syscall.h>
 #include <test.h>
 #include <csr.h>
@@ -147,6 +148,9 @@ static void init_syscall(void)
     syscall[SYSCALL_GET_TIMEBASE] = &get_time_base;
     syscall[SYSCALL_GET_TICK    ] = &get_ticks;
     syscall[SYSCALL_YIELD       ] = &do_scheduler;
+    syscall[SYSCALL_LOCK_INIT   ] = &do_mutex_lock_init;
+    syscall[SYSCALL_LOCK_ACQUIRE] = &do_mutex_lock_acquire;
+    syscall[SYSCALL_LOCK_RELEASE] = &do_mutex_lock_release;
 }
 
 // jump from bootloader.
