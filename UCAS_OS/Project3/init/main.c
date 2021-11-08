@@ -57,7 +57,7 @@ static void init_pcb_stack(
     {
         pt_regs->regs[i] = 0;
     }
-
+    pt_regs->regs[1] = (reg_t)entry_point;
     pt_regs->regs[2] = user_stack;
     pt_regs->regs[3] = (reg_t)__global_pointer$;
     pt_regs->regs[10] = (reg_t)arg;
@@ -93,8 +93,10 @@ pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
     pcb[i].type = task -> type;
     pcb[i].kernel_sp = allocPage(1);
     pcb[i].user_sp = allocPage(1);
+    list_init(&pcb[i].wait_list);
     init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, task -> entry_point, arg, &pcb[i]);
     enqueue(&ready_queue, &(pcb[i].list));
+    return i + 1;
 }
 
 int find_freepcb() {
@@ -155,6 +157,9 @@ static void init_shell()
     // The beginning of everything >_< ~~~~~~~~~~~~~~
     int main()
     {
+        for (int i = 1; i < NUM_MAX_TASK; i++)
+            pcb[i].pid = 0;
+
         // init Shell (-_-!)
         init_shell();
         printk("> [INIT] Shell initialization succeeded.\n\r");
@@ -179,7 +184,7 @@ static void init_shell()
         // TODO:
         // Setup timer interrupt and enable all interrupt
 #ifdef INTERRUPT
-        sbi_set_timer(get_ticks() + get_time_base() / 500);
+        sbi_set_timer(get_ticks() + get_time_base() / 1000);
 #endif
 
         while (1)

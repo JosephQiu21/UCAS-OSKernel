@@ -120,7 +120,8 @@ typedef struct pcb
     uint64_t timeout_ticks;
 
     /* Lock */
-    mutex_lock_t *lock;
+    int num_lock;
+    mutex_lock_t *locks[10];
 } pcb_t;
 
 /* task information, used to init PCB */

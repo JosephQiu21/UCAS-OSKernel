@@ -136,7 +136,7 @@ void shell_kill(char *pid){
 void shell_clear(){
     sys_screen_clear();
     sys_move_cursor(1, SHELL_BEGIN);
-    printf("------------------- COMMAND -------------------\n");
+    printf("------------------- JOSEPH's SHELL -------------------\n");
 }
 
 void shell_ps(){
@@ -198,7 +198,7 @@ void test_shell()
 {
     sys_screen_clear();
     sys_move_cursor(1, SHELL_BEGIN);
-    printf("------------------- COMMAND -------------------\n");
+    printf("------------------- JOSEPH's SHELL -------------------\n");
     printf("> root@UCAS_OS: ");
 
     char ch;

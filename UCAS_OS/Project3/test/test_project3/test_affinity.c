@@ -40,7 +40,7 @@ void integer_test_task(int print_location)
             ans += rand();
 	}
         sys_move_cursor(1, print_location);
-        printf("[%ld] integer test (%d/%d)\n\r", pid, i, MAX_ITERATION);
+        printf("[%d] integer test (%d/%d)\n\r", pid, i, MAX_ITERATION);
     }
     sys_exit();
 }

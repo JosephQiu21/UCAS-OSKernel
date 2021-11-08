@@ -11,6 +11,7 @@ mthread_mutex_t lock2;
 
 void ready_to_exit_task()
 {
+    int pid;
     int i = 0, print_location = 1;
 
     mthread_mutex_lock(&lock1);
@@ -19,7 +20,8 @@ void ready_to_exit_task()
     for (i = 0; i < 1000; i++)
     {
         sys_move_cursor(1, print_location);
-        printf("> [TASK] I am task with pid %d, I have acquired two mutex lock. (%d)", sys_getpid(), i++);
+        pid = sys_getpid();
+        printf("> [TASK ready_to_exit] I am task with pid %d, I have acquired two mutex lock. (%d)", pid, i++);
     }
 
     mthread_mutex_unlock(&lock2);
@@ -27,17 +29,17 @@ void ready_to_exit_task()
     sys_exit(); // test exit
 }
 
-void wait_lock_task(long other_pid)
+void wait_lock_task(int other_pid)
 {
     int print_location = 2;
 
     sys_move_cursor(1, print_location);
-    printf("> [TASK] I want to acquire a mutex lock from task(pid=%ld).", (long)other_pid);
+    printf("> [TASK wait_lock] I want to acquire a mutex lock from task(pid=%d).", other_pid);
 
     mthread_mutex_lock(&lock1);
 
     sys_move_cursor(1, print_location);
-    printf("> [TASK] I have acquired a mutex lock from task(pid=%ld).", (long)other_pid);
+    printf("> [TASK wait_lock] I have acquired a mutex lock from task(pid=%d).", other_pid);
 
     mthread_mutex_unlock(&lock1);
 
@@ -53,19 +55,19 @@ void wait_exit_task()
 
     pid_t pid_task1 = sys_spawn(&task1, NULL, ENTER_ZOMBIE_ON_EXIT);
     sys_sleep(3); // wait enough time for task1 to spawn
-    pid_t pid_task2 = sys_spawn(&task2, (void*)(long)pid_task1,
+    pid_t pid_task2 = sys_spawn(&task2, (void*)pid_task1,
                                 AUTO_CLEANUP_ON_EXIT);
 
     int print_location = 3;
 
     sys_move_cursor(1, print_location);
-    printf("> [TASK] I want to wait task (pid=%ld) to exit.",
+    printf("> [TASK wait_exit] I want to wait task (pid=%d) to exit.",
            pid_task1);
 
     sys_waitpid(pid_task1); //test waitpid
 
     sys_move_cursor(1, print_location);
-    printf("> [TASK] Task (pid=%d) has exited.                ",
+    printf("> [TASK wait_exit] Task (pid=%d) has exited.                ",
            pid_task1);
 
     sys_exit(); // test exit

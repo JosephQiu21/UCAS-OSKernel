@@ -6,7 +6,7 @@
 #include <os/sched.h>
 #include <os/irq.h>
 
-#define SCREEN_WIDTH    80
+#define SCREEN_WIDTH    100
 #define SCREEN_HEIGHT   50
 
 int screen_cursor_x;

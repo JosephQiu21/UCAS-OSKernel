@@ -27,28 +27,26 @@ pid_t process_id = 1;
 
 void do_scheduler(void)
 {
-    __asm__ __volatile__("csrr x0, sscratch\n");
     // Check sleep queue to wake up
-    check_timer();
+    check_timer(); 
     // Modify the current_running pointer.
-    if(!is_list_empty(&ready_queue)){
-        pcb_t *next_running = container_of(dequeue(&ready_queue), pcb_t, list);
-        pcb_t *tmp = current_running;
+    pcb_t *next_running = is_list_empty(&ready_queue) ? &pid0_pcb : 
+                                                        container_of(dequeue(&ready_queue), pcb_t, list);
+    pcb_t *tmp = current_running;
 
-        // If not kernel process, add current_running to ready_queue
-        if(current_running -> status == TASK_RUNNING && current_running -> pid != 0){ 
-            enqueue(&ready_queue, &(current_running -> list));
-            current_running -> status = TASK_READY;
-        }
-        next_running -> status = TASK_RUNNING;
-        current_running = next_running;
-        process_id = current_running -> pid;
-        // restore the current_runnint's cursor_x and cursor_y
-        vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
-        screen_cursor_x = current_running->cursor_x;
-        screen_cursor_y = current_running->cursor_y;
-        switch_to(tmp, current_running);
+    // If not kernel process, add current_running to ready_queue
+    if(current_running -> status == TASK_RUNNING && current_running -> pid != 0){ 
+        enqueue(&ready_queue, &(current_running -> list));
+        current_running -> status = TASK_READY;
     }
+    next_running -> status = TASK_RUNNING;
+    current_running = next_running;
+    process_id = current_running -> pid;
+    // restore the current_runnint's cursor_x and cursor_y
+    vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
+    screen_cursor_x = current_running->cursor_x;
+    screen_cursor_y = current_running->cursor_y;
+    switch_to(tmp, current_running);
 }
 
 void do_sleep(uint32_t sleep_time)
@@ -79,6 +77,9 @@ void do_unblock(list_node_t *pcb_node)
     enqueue(&ready_queue, &(task -> list));
 }
 
+
+
+
 int do_kill(pid_t pid){
     pcb_t *killed_pcb = &pcb[pid - 1];
     if (pid == 1){
@@ -95,11 +96,12 @@ int do_kill(pid_t pid){
         // Find last pcb in the waiting list
         pcb_t *wait_pcb = container_of(killed_pcb -> wait_list.prev, pcb_t, list);
         if (wait_pcb -> status != TASK_EXITED)
-            do_unblock(wait_pcb);
+            do_unblock(&(wait_pcb -> list));
     }
 
     // Release lock
-    do_mutex_lock_release(killed_pcb -> lock);
+    for (int i = 0; i < killed_pcb -> num_lock; i++) 
+        do_mutex_lock_release(killed_pcb -> locks[i]);
 
     // Recycle PCB and memory
     killed_pcb -> status = (killed_pcb -> mode == ENTER_ZOMBIE_ON_EXIT) ? TASK_ZOMBIE : TASK_EXITED;
@@ -119,8 +121,12 @@ pid_t do_getpid() {
 
 // Add current running to waiting list of pid
 int do_waitpid(pid_t pid){
-    if (pcb[pid - 1].status != TASK_EXITED && pcb[pid - 1].status != TASK_ZOMBIE)
-        do_block(current_running, &(pcb[pid - 1].wait_list));
+    if (pcb[pid - 1].status != TASK_EXITED && pcb[pid - 1].status != TASK_ZOMBIE){
+        if (pcb[pid - 1].status != TASK_ZOMBIE)
+            do_block(current_running, &(pcb[pid - 1].wait_list));
+        regs_context_t *pt_regs = (regs_context_t *)(pcb[pid - 1].kernel_sp - sizeof(regs_context_t));
+        return pt_regs -> regs[1];
+    }
 }
 
 void do_exit(){
@@ -131,11 +137,12 @@ void do_exit(){
         // Find last pcb in the waiting list
         pcb_t *wait_pcb = container_of(exited_pcb -> wait_list.prev, pcb_t, list);
         if (wait_pcb -> status != TASK_EXITED)
-            do_unblock(wait_pcb);
+            do_unblock(&(wait_pcb -> list));
     }
 
     // Release lock
-    do_mutex_lock_release(exited_pcb -> lock);
+    for (int i = 0; i < exited_pcb -> num_lock; i++) 
+        do_mutex_lock_release(exited_pcb -> locks[i]);
 
     // Recycle PCB and memory
     exited_pcb -> status = (exited_pcb -> mode == ENTER_ZOMBIE_ON_EXIT) ? TASK_ZOMBIE : TASK_EXITED;
@@ -147,12 +154,12 @@ void do_exit(){
 }
 
 void do_process_show() {
-    prints("\n----------[PROCESS TABLE]----------\n");
-    int i;
+    prints("\n---------- [PROCESS TABLE] ----------\n");
+    int t;
     char* state_table[5] = {"BLOCKED", "RUNNING", "READY", "ZOMBIE", "EXITED"};
-    for (i = 0; i < NUM_MAX_TASK; i++){
-        if (pcb[i].pid != 0){
-            prints("[%d] PID : %d STATUS : %s\n", i, pcb[i].pid, state_table[pcb[i].status]);
+    for (t = 0; t < NUM_MAX_TASK; t++){
+        if (pcb[t].pid != 0){
+            prints("[%d] PID : %d STATUS : %s\n", t, pcb[t].pid, state_table[pcb[t].status]);
         }
     }
     
