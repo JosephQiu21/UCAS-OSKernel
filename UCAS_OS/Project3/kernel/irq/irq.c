@@ -16,7 +16,7 @@ void reset_irq_timer()
     screen_reflush();
     check_timer();
     // note: use sbi_set_timer
-    sbi_set_timer(get_ticks() + get_time_base() / 500);
+    sbi_set_timer(get_ticks() + get_time_base() / 1000);
     // remember to reschedule
     do_scheduler();
 }

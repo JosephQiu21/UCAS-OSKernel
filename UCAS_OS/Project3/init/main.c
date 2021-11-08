@@ -45,6 +45,9 @@ extern void ret_from_exception();
 extern void __global_pointer$();
 list_head ready_queue, block_queue, sleep_queue;
 
+uint64_t kernel_stack[NUM_MAX_TASK];
+uint64_t user_stack[NUM_MAX_TASK];
+
 static void init_pcb_stack(
     ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point, void *arg,
     pcb_t *pcb)
@@ -91,8 +94,8 @@ pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
     pcb[i].pid = i + 1;
     pcb[i].mode = mode;
     pcb[i].type = task -> type;
-    pcb[i].kernel_sp = allocPage(1);
-    pcb[i].user_sp = allocPage(1);
+    pcb[i].kernel_sp = kernel_stack[i];
+    pcb[i].user_sp = user_stack[i];
     list_init(&pcb[i].wait_list);
     init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, task -> entry_point, arg, &pcb[i]);
     enqueue(&ready_queue, &(pcb[i].list));
@@ -108,6 +111,14 @@ int find_freepcb() {
     return -1;
 }
 
+void init_all_stack(){
+    int i;
+    for (i = 0; i < NUM_MAX_TASK; i++){
+        kernel_stack[i] = allocPage(1);
+        user_stack[i] = allocPage(1);
+    }
+}
+
 static void init_shell()
 {
     list_init(&ready_queue);
@@ -115,8 +126,8 @@ static void init_shell()
     pcb[0].pid = 1;
     pcb[0].status = TASK_READY;
     pcb[0].type = USER_PROCESS;
-    pcb[0].kernel_sp = allocPage(1);
-    pcb[0].user_sp = allocPage(1);
+    pcb[0].kernel_sp = kernel_stack[0];
+    pcb[0].user_sp = user_stack[0];
     init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, &test_shell, NULL, &pcb[0]);
     enqueue(&ready_queue, &(pcb[0].list));
     current_running = &pid0_pcb;
@@ -157,8 +168,7 @@ static void init_shell()
     // The beginning of everything >_< ~~~~~~~~~~~~~~
     int main()
     {
-        for (int i = 1; i < NUM_MAX_TASK; i++)
-            pcb[i].pid = 0;
+        init_all_stack();
 
         // init Shell (-_-!)
         init_shell();

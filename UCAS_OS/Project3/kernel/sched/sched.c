@@ -123,9 +123,8 @@ pid_t do_getpid() {
 int do_waitpid(pid_t pid){
     if (pcb[pid - 1].status != TASK_EXITED && pcb[pid - 1].status != TASK_ZOMBIE){
         if (pcb[pid - 1].status != TASK_ZOMBIE)
-            do_block(current_running, &(pcb[pid - 1].wait_list));
-        regs_context_t *pt_regs = (regs_context_t *)(pcb[pid - 1].kernel_sp - sizeof(regs_context_t));
-        return pt_regs -> regs[1];
+            do_block(&(current_running -> list), &(pcb[pid - 1].wait_list));
+        return pid;
     }
 }
 

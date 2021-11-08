@@ -93,6 +93,7 @@
 #define PCB_KERNEL_SP          0
 #define PCB_USER_SP            8
 #define PCB_PREEMPT_COUNT      16
+#define PCB_SAVE_SP            40
 
 /* offset in switch_to */
 #define SWITCH_TO_RA     0
