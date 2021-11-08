@@ -40,8 +40,8 @@
 
 // #define LOCK_TEST
 // #define SCHEDULE_TEST
-// #define TIMER_TEST
-#define INTERRUPT_TEST
+#define TIMER_TEST
+// #define INTERRUPT_TEST
 
 #define INTERRUPT
 //#define NONPREEMPT

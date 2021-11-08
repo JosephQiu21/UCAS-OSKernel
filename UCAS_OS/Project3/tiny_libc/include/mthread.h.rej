@@ -1,0 +1,35 @@
+--- tiny_libc/include/mthread.h	2021-09-29 17:20:26.969530105 +0800
++++ tiny_libc/include/mthread.h	2021-10-14 17:21:24.871142531 +0800
+@@ -39,8 +39,29 @@ typedef struct mthread_mutex
+     // TODO:
+ } mthread_mutex_t;
+ 
+-int mthread_mutex_init(void* handle);
+-int mthread_mutex_lock(void* handle);
+-int mthread_mutex_unlock(void* handle);
++int mthread_mutex_init(void *handle);
++int mthread_mutex_destroy(void *handle);
++int mthread_mutex_trylock(void *handle);
++int mthread_mutex_lock(void *handle);
++int mthread_mutex_unlock(void *handle);
++
++typedef struct mthread_barrier
++{
++    // TODO:
++} mthread_barrier_t;
++
++int mthread_barrier_init(void *handle, unsigned count);
++int mthread_barrier_wait(void *handle);
++int mthread_barrier_destroy(void *handle);
++
++typedef struct mthread_semaphore
++{
++    // TODO:
++} mthread_semaphore_t;
++
++int mthread_semaphore_init(void *handle, int val);
++int mthread_semaphore_up(void *handle);
++int mthread_semaphore_down(void *handle);
++int mthread_semaphore_destroy(void *handle);
+ 
+ #endif

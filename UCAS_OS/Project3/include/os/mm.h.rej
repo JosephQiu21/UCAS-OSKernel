@@ -1,0 +1,11 @@
+--- include/os/mm.h	2021-09-29 17:20:26.968530112 +0800
++++ include/os/mm.h	2020-10-20 20:23:01.000000000 +0800
+@@ -31,7 +31,7 @@
+ 
+ #define MEM_SIZE 32
+ #define PAGE_SIZE 4096 // 4K
+-#define INIT_KERNEL_STACK 0x50500000
++#define INIT_KERNEL_STACK 0x50500000lu
+ #define FREEMEM (INIT_KERNEL_STACK+PAGE_SIZE)
+ 
+ /* Rounding; only works for n = power of two */
