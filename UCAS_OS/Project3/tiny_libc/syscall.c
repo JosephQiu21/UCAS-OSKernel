@@ -101,3 +101,32 @@ char sys_read(void)
 {
     return invoke_syscall(SYSCALL_READ, IGNORE, IGNORE, IGNORE);
 }
+
+int sys_semaphore_init(int val){
+    return invoke_syscall(SYSCALL_SEMAPHORE_INIT, val, IGNORE, IGNORE);
+}
+
+int sys_semaphore_up(int handle){
+    return invoke_syscall(SYSCALL_SEMAPHORE_UP, handle, IGNORE, IGNORE);
+}
+
+int sys_semaphore_down(int handle){
+    return invoke_syscall(SYSCALL_SEMAPHORE_DOWN, handle, IGNORE, IGNORE);
+}
+
+int sys_semaphore_destroy(int handle){
+    return invoke_syscall(SYSCALL_SEMAPHORE_DESTROY, handle, IGNORE, IGNORE);
+}
+
+int sys_barrier_init(int count){
+    return invoke_syscall(SYSCALL_BARRIER_INIT, handle, IGNORE, IGNORE);
+}
+
+int sys_barrier_wait(int handle){
+    return invoke_syscall(SYSCALL_BARRIER_WAIT, handle, IGNORE, IGNORE);
+}
+
+int sys_barrier_destroy(int handle){
+    return invoke_syscall(SYSCALL_BARRIER_DESTROY, handle, IGNORE, IGNORE);
+}
+

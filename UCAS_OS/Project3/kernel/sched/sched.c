@@ -94,7 +94,7 @@ int do_kill(pid_t pid){
     // Unblock tasks in its waiting list
     while (!is_list_empty(&killed_pcb -> wait_list)){
         // Find last pcb in the waiting list
-        pcb_t *wait_pcb = container_of(killed_pcb -> wait_list.prev, pcb_t, list);
+        pcb_t *wait_pcb = container_of(dequeue(&killed_pcb -> wait_list), pcb_t, list);
         if (wait_pcb -> status != TASK_EXITED)
             do_unblock(&(wait_pcb -> list));
     }
@@ -124,6 +124,7 @@ int do_waitpid(pid_t pid){
     if (pcb[pid - 1].status != TASK_EXITED && pcb[pid - 1].status != TASK_ZOMBIE){
         if (pcb[pid - 1].status != TASK_ZOMBIE)
             do_block(&(current_running -> list), &(pcb[pid - 1].wait_list));
+
         return pid;
     }
 }
@@ -134,7 +135,7 @@ void do_exit(){
     // Unblock tasks in its waiting list
     while (!is_list_empty(&exited_pcb -> wait_list)){
         // Find last pcb in the waiting list
-        pcb_t *wait_pcb = container_of(exited_pcb -> wait_list.prev, pcb_t, list);
+        pcb_t *wait_pcb = container_of(dequeue(&exited_pcb -> wait_list), pcb_t, list);
         if (wait_pcb -> status != TASK_EXITED)
             do_unblock(&(wait_pcb -> list));
     }
@@ -147,7 +148,6 @@ void do_exit(){
     exited_pcb -> status = (exited_pcb -> mode == ENTER_ZOMBIE_ON_EXIT) ? TASK_ZOMBIE : TASK_EXITED;
 
     exited_pcb -> pid = 0;
-    delete_item(&(exited_pcb -> list));
 
     do_scheduler();
 }

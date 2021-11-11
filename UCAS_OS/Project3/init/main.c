@@ -143,25 +143,32 @@ static void init_shell()
         // initialize system call table.
         for (int i = 0; i < NUM_SYSCALLS; i++)
             syscall[i] = &error_syscall;
-        syscall[SYSCALL_SLEEP       ] = &do_sleep;
-        syscall[SYSCALL_WRITE       ] = &screen_write;
-        syscall[SYSCALL_CURSOR      ] = &screen_move_cursor;
-        syscall[SYSCALL_REFLUSH     ] = &screen_reflush;
-        syscall[SYSCALL_SERIAL_READ ] = &sbi_console_getchar;
-        syscall[SYSCALL_SERIAL_WRITE] = &screen_serial_write;
-        syscall[SYSCALL_SCREEN_CLEAR] = &screen_clear;
-        syscall[SYSCALL_GET_TIMEBASE] = &get_time_base;
-        syscall[SYSCALL_GET_TICK    ] = &get_ticks;
-        syscall[SYSCALL_YIELD       ] = &do_scheduler;
-        syscall[SYSCALL_MUTEX_GET   ] = &mutex_get;
-        syscall[SYSCALL_MUTEX_OP    ] = &mutex_op;
-        syscall[SYSCALL_GET_WALL    ] = &get_wall_time;
-        syscall[SYSCALL_SPAWN       ] = &do_spawn;
-        syscall[SYSCALL_KILL        ] = &do_kill;
-        syscall[SYSCALL_PS          ] = &do_process_show;
-        syscall[SYSCALL_GETPID      ] = &do_getpid;
-        syscall[SYSCALL_WAITPID     ] = &do_waitpid;
-        syscall[SYSCALL_EXIT        ] = &do_exit;
+        syscall[SYSCALL_SLEEP            ] = &do_sleep;
+        syscall[SYSCALL_WRITE            ] = &screen_write;
+        syscall[SYSCALL_CURSOR           ] = &screen_move_cursor;
+        syscall[SYSCALL_REFLUSH          ] = &screen_reflush;
+        syscall[SYSCALL_SERIAL_READ      ] = &sbi_console_getchar;
+        syscall[SYSCALL_SERIAL_WRITE     ] = &screen_serial_write;
+        syscall[SYSCALL_SCREEN_CLEAR     ] = &screen_clear;
+        syscall[SYSCALL_GET_TIMEBASE     ] = &get_time_base;
+        syscall[SYSCALL_GET_TICK         ] = &get_ticks;
+        syscall[SYSCALL_YIELD            ] = &do_scheduler;
+        syscall[SYSCALL_MUTEX_GET        ] = &mutex_get;
+        syscall[SYSCALL_MUTEX_OP         ] = &mutex_op;
+        syscall[SYSCALL_GET_WALL         ] = &get_wall_time;
+        syscall[SYSCALL_SPAWN            ] = &do_spawn;
+        syscall[SYSCALL_KILL             ] = &do_kill;
+        syscall[SYSCALL_PS               ] = &do_process_show;
+        syscall[SYSCALL_GETPID           ] = &do_getpid;
+        syscall[SYSCALL_WAITPID          ] = &do_waitpid;
+        syscall[SYSCALL_EXIT             ] = &do_exit;
+        syscall[SYSCALL_SEMAPHORE_INIT   ] = &semaphore_init;
+        syscall[SYSCALL_SEMAPHORE_UP     ] = &semaphore_up;
+        syscall[SYSCALL_SEMAPHORE_DOWN   ] = &semaphore_down;
+        syscall[SYSCALL_SEMAPHORE_DESTROY] = &semaphore_destroy;
+        syscall[SYSCALL_BARRIER_INIT     ] = &barrier_init;
+        syscall[SYSCALL_BARRIER_WAIT     ] = &barrier_wait;
+        syscall[SYSCALL_BARRIER_DESTROY  ] = &barrier_destroy;
     }
 
     // jump from bootloader.
