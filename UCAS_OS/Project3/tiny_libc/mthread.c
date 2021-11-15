@@ -2,6 +2,7 @@
 #include <mthread.h>
 #include <sys/syscall.h>
 #include <os/lock.h>
+#include <os/sync.h>
 
 void mthread_mutex_init(void* handle)
 {
@@ -23,32 +24,46 @@ void mthread_mutex_unlock(void* handle)
     sys_mutex_op(*id, UNLOCK);
 }
 
-int mthread_barrier_init(void* handle, unsigned count)
+void mthread_barrier_init(void* handle, unsigned count)
 {
-    // TODO:
-}
-int mthread_barrier_wait(void* handle)
-{
-    // TODO:
-}
-int mthread_barrier_destroy(void* handle)
-{
-    // TODO:
+    int *id = (int *)handle;
+    *id = sys_barrier_get((int)handle);
+    sys_barrier_init(*id, count);
 }
 
-int mthread_semaphore_init(void* handle, int val)
+void mthread_barrier_wait(void* handle)
 {
-    // TODO:
+    int *id = (int *)handle;
+    sys_barrier_op(*id, WAIT);
 }
-int mthread_semaphore_up(void* handle)
+
+void mthread_barrier_destroy(void* handle)
 {
-    // TODO:
+    int *id = (int *)handle;
+    sys_barrier_op(*id, DESTROY);
 }
-int mthread_semaphore_down(void* handle)
+
+void mthread_semaphore_init(void* handle, int val)
 {
-    // TODO:
+    int *id = (int *)handle;
+    *id = sys_semaphore_get((int)handle);
+    sys_semaphore_init(*id, val);
 }
-int mthread_semaphore_destroy(void* handle)
+
+void mthread_semaphore_up(void* handle)
 {
-    // TODO:
+    int *id = (int *)handle;
+    sys_semaphore_op(*id, UP);
+}
+
+void mthread_semaphore_down(void* handle)
+{
+    int *id = (int *)handle;
+    sys_semaphore_op(*id, DOWN);
+}
+
+void mthread_semaphore_destroy(void* handle)
+{
+    int *id = (int *)handle;
+    sys_semaphore_op(*id, DESTROY);
 }

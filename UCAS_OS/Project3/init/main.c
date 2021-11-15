@@ -35,6 +35,7 @@
 #include <os/time.h>
 #include <os/lock.h>
 #include <os/syscall.h>
+#include <os/sync.h>
 #include <test.h>
 #include <csr.h>
 
@@ -162,13 +163,12 @@ static void init_shell()
         syscall[SYSCALL_GETPID           ] = &do_getpid;
         syscall[SYSCALL_WAITPID          ] = &do_waitpid;
         syscall[SYSCALL_EXIT             ] = &do_exit;
+        syscall[SYSCALL_SEMAPHORE_GET    ] = &semaphore_get;
         syscall[SYSCALL_SEMAPHORE_INIT   ] = &semaphore_init;
-        syscall[SYSCALL_SEMAPHORE_UP     ] = &semaphore_up;
-        syscall[SYSCALL_SEMAPHORE_DOWN   ] = &semaphore_down;
-        syscall[SYSCALL_SEMAPHORE_DESTROY] = &semaphore_destroy;
+        syscall[SYSCALL_SEMAPHORE_OP     ] = &semaphore_op;
+        syscall[SYSCALL_BARRIER_GET      ] = &barrier_get;
         syscall[SYSCALL_BARRIER_INIT     ] = &barrier_init;
-        syscall[SYSCALL_BARRIER_WAIT     ] = &barrier_wait;
-        syscall[SYSCALL_BARRIER_DESTROY  ] = &barrier_destroy;
+        syscall[SYSCALL_BARRIER_OP       ] = &barrier_op;
     }
 
     // jump from bootloader.

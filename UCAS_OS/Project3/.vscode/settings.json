@@ -4,6 +4,7 @@
         "syscall.h": "c",
         "unistd.h": "c",
         "os.h": "c",
-        "test3.h": "c"
+        "test3.h": "c",
+        "lock.h": "c"
     }
 }

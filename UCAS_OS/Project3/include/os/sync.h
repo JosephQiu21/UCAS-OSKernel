@@ -30,5 +30,54 @@
 #define INCLUDE_SYNC_H_
 
 #include <os/lock.h>
+#include <os/list.h>
+
+enum semaphore_op{
+    UP,
+    DOWN,
+    DESTROY
+};
+
+enum barrier_op{
+    WAIT,
+    DESTROY
+};
+
+typedef struct semaphore
+{
+    int val;
+    list_head block_queue;
+    int destoryed;
+} semaphore_t;
+
+typedef struct barrier
+{
+    int total_num;
+    int wait_num;
+    list_head block_queue;
+    int destoryed;
+} barrier_t;
+
+extern void do_semaphore_init(semaphore_t *sem, int val);
+extern void do_semaphore_up(semaphore_t *sem);
+extern void do_semaphore_down(semaphore_t *sem);
+extern void do_semaphore_destroy(semaphore_t *sem);
+
+extern int semaphore_get(int key);
+extern void semaphore_op(int handle, int op);
+extern void semaphore_init(int handle, int val);
+
+extern int semaphore_fetchhash(int key);
+
+extern void do_barrier_init(barrier_t *bar, int count);
+extern void do_barrier_wait(barrier_t *bar);
+extern void do_barrier_destroy(barrier_t *bar);
+
+extern void barrier_init(int handle, int count)
+extern int barrier_get(int key);
+extern void barrier_op(int handle, int op);
+
+extern int barrier_fetchhash(int key);
+
 
 #endif

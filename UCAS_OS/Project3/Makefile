@@ -17,7 +17,7 @@ SRC_ARCH	= $(ARCH_DIR)/kernel/trap.S $(ARCH_DIR)/kernel/entry.S $(ARCH_DIR)/kern
 SRC_DRIVER	= ./drivers/screen.c
 SRC_INIT 	= ./init/main.c
 SRC_INT		= ./kernel/irq/irq.c
-SRC_LOCK	= ./kernel/locking/lock.c 
+SRC_SYNC	= ./kernel/sync/sync.c 
 SRC_SCHED	= ./kernel/sched/sched.c ./kernel/sched/time.c ./kernel/sched/list.c
 SRC_MM	= ./kernel/mm/mm.c
 SRC_SYSCALL	= ./kernel/syscall/syscall.c
@@ -30,7 +30,7 @@ SRC_TEST2	= ./test/test_project2/test_scheduler.c ./test/test_project2/test_slee
 SRC_TEST3   = ./test/test_project3/test_wait.c ./test/test_project3/test_semaphore.c ./test/test_project3/test_multicore.c ./test/test_project3/test_kill.c ./test/test_project3/test_affinity.c ./test/test_project3/test_barrier.c
 
 
-SRC_MAIN	= ${SRC_ARCH} ${SRC_INIT} ${SRC_INT} ${SRC_DRIVER} ${SRC_LOCK} ${SRC_SCHED} ${SRC_MM} ${SRC_SYSCALL} ${SRC_LIBS} ${SRC_LIBC} ${SRC_TEST} ${SRC_TEST2} ${SRC_TEST3}
+SRC_MAIN	= ${SRC_ARCH} ${SRC_INIT} ${SRC_INT} ${SRC_DRIVER} ${SRC_SYNC} ${SRC_SCHED} ${SRC_MM} ${SRC_SYSCALL} ${SRC_LIBS} ${SRC_LIBC} ${SRC_TEST} ${SRC_TEST2} ${SRC_TEST3}
 
 SRC_IMAGE	= ./tools/createimage.c
 

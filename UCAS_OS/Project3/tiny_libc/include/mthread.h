@@ -44,23 +44,17 @@ int mthread_mutex_trylock(void *handle);
 void mthread_mutex_lock(void *handle);
 void mthread_mutex_unlock(void *handle);
 
-typedef struct mthread_barrier
-{
-    // TODO:
-} mthread_barrier_t;
+typedef int mthread_barrier_t;
 
-int mthread_barrier_init(void *handle, unsigned count);
-int mthread_barrier_wait(void *handle);
-int mthread_barrier_destroy(void *handle);
+void mthread_barrier_init(void *handle, unsigned count);
+void mthread_barrier_wait(void *handle);
+void mthread_barrier_destroy(void *handle);
 
-typedef struct mthread_semaphore
-{
-    // TODO:
-} mthread_semaphore_t;
+typedef int mthread_semaphore_t;
 
-int mthread_semaphore_init(void *handle, int val);
-int mthread_semaphore_up(void *handle);
-int mthread_semaphore_down(void *handle);
-int mthread_semaphore_destroy(void *handle);
+void mthread_semaphore_init(void *handle, int val);
+void mthread_semaphore_up(void *handle);
+void mthread_semaphore_down(void *handle);
+void mthread_semaphore_destroy(void *handle);
 
 #endif
