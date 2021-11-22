@@ -6,6 +6,8 @@
 // TODO: please define mailbox_t;
 // mailbox_t is just an id of kernel's mail box.
 
+typedef int mailbox_t;
+
 mailbox_t mbox_open(char *);
 void mbox_close(mailbox_t);
 int mbox_send(mailbox_t, void *, int);

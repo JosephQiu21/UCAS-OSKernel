@@ -126,3 +126,18 @@ void sys_barrier_op(int id, int op){
     invoke_syscall(SYSCALL_BARRIER_OP, id, op, IGNORE);
 }
 
+int sys_mbox_open(char *name){
+    invoke_syscall(SYSCALL_MBOX_OPEN, name, IGNORE, IGNORE);
+}
+
+void sys_mbox_close(int id){
+    invoke_syscall(SYSCALL_MBOX_CLOSE, id, IGNORE, IGNORE);
+}
+
+int sys_mbox_send(int id, void *msg, int msg_length){
+    invoke_syscall(SYSCALL_MBOX_SEND, msg, msg_length, IGNORE);
+}
+
+int sys_mbox_recv(int id, void *msg, int msg_length){
+    invoke_syscall(SYSCALL_MBOX_RECV, msg, msg_length, IGNORE);
+}

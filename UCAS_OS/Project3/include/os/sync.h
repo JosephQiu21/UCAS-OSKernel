@@ -58,6 +58,16 @@ typedef struct barrier
     int destoryed;
 } barrier_t;
 
+typedef struct mailbox_k
+{
+    char name[25];                   
+    char msg[64];       
+    int index;                       
+    int opened;
+    list_head empty_queue;
+    list_head full_queue;
+} mailbox_k_t;
+
 void do_semaphore_init(semaphore_t *sem, int val);
 void do_semaphore_up(semaphore_t *sem);
 void do_semaphore_down(semaphore_t *sem);
@@ -78,6 +88,11 @@ int barrier_get(int key);
 void barrier_op(int handle, int op);
 
 int barrier_fetchhash(int key);
+
+int do_mbox_open(char *name);
+void do_mbox_close(int handle);
+int do_mbox_send(int handle, void *msg, int msg_length);
+int do_mbox_recv(int handle, void *msg, int msg_length);
 
 
 #endif

@@ -6,18 +6,23 @@
 #define MAX_LOCK_NUM 16
 #define MAX_SEMAPHORE_NUM 16
 #define MAX_BARRIER_NUM 16
+#define MAX_MBOX_NUM 16
+
+#define MAX_MBOX_LENGTH 64
 
 static int lock_id = 0;
 static int semaphore_id = 0;
 static int barrier_id = 0;
+static int mbox_id = 0;
 
 int lock_hash[MAX_LOCK_NUM];
 int semaphore_hash[MAX_SEMAPHORE_NUM];
-int barrier_hash[MAX_BARRIER_NUM];
+int barrier_hash[MAX_MBOX_NUM];
 
 mutex_lock_t lock[MAX_LOCK_NUM];
 semaphore_t semaphore[MAX_SEMAPHORE_NUM];
 barrier_t barrier[MAX_BARRIER_NUM];
+mailbox_k_t mbox[MAX_MBOX_NUM];
 
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
@@ -94,6 +99,7 @@ int barrier_fetchhash(int key){
         if (barrier_hash[i] == key) return i;
     return -1;
 }
+
 
 void do_semaphore_init(semaphore_t *sem, int val){
     sem -> val = val;
@@ -186,4 +192,67 @@ void barrier_op(int handle, int op){
         do_barrier_wait(&barrier[handle]);
     else if (op == BARRIER_DESTROY)
         do_barrier_destroy(&barrier[handle]);
+}
+
+int do_mbox_open(char *name){
+    int i;
+    for(i = 0; i < MAX_MBOX_NUM; i++){
+        if((kstrcmp(name, mbox[i].name) == 0) && mbox[i].opened){
+            return i;
+        }
+    }
+    
+    mbox_id++;
+    mbox[mbox_id].opened = 1;
+    mbox[mbox_id].index = 0;
+    list_init(&mbox[mbox_id].full_queue);
+    list_init(&mbox[mbox_id].empty_queue);
+
+    int j = 0;
+    while(*name){
+        mbox[mbox_id].name[j++] = *name;
+        name++;
+    }
+    mbox[mbox_id].name[j]='\0';
+    return mbox_id;
+}
+
+void do_mbox_close(int handle){
+    mbox[handle].opened = 0;
+}
+
+int do_mbox_send(int handle, void *msg, int msg_length){
+    int blocked = 0;
+    while(mbox[handle].index + msg_length > MAX_MBOX_LENGTH){
+        do_block(&(current_running -> list), &(mbox[handle].full_queue));
+        blocked = 1;
+    }
+    int i;
+    for(i = 0; i < msg_length; i++){
+        mbox[handle].msg[mbox[handle].index++] = ((char *)msg)[i];
+    }
+    while(!list_empty(&(mbox[handle].empty_queue))){
+        do_unblock(&(mbox[handle].empty_queue));
+    }
+    return blocked;
+}
+
+int do_mbox_recv(int handle, void *msg, int msg_length){
+    int blocked = 0;
+    while(mbox[handle].index - msg_length < 0){
+        do_block(&(current_running -> list), &(mbox[handle].empty_queue));
+        blocked = 1;
+    }
+    int i;
+    for(i = 0; i < msg_length; i++){
+        ((char *)msg)[i] = mbox[handle].msg[i];
+    }
+    for(i = 0; i < MAX_MBOX_LENGTH - msg_length; i++){
+        mbox[handle].msg[i] = mbox[handle].msg[i + msg_length];
+    }
+    mbox[handle].index -= msg_length;
+    while(!list_empty(&(mbox[handle].full_queue))){
+        do_unblock(&(mbox[handle].full_queue));
+    }
+    return blocked;
 }

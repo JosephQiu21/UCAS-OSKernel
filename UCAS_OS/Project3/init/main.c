@@ -174,6 +174,10 @@ static void init_shell()
         syscall[SYSCALL_BARRIER_GET      ] = &barrier_get;
         syscall[SYSCALL_BARRIER_INIT     ] = &barrier_init;
         syscall[SYSCALL_BARRIER_OP       ] = &barrier_op;
+        syscall[SYSCALL_MBOX_OPEN        ] = &do_mbox_open;
+        syscall[SYSCALL_MBOX_CLOSE       ] = &do_mbox_close;
+        syscall[SYSCALL_MBOX_SEND        ] = &do_mbox_send;
+        syscall[SYSCALL_MBOX_RECV        ] = &do_mbox_recv;
     }
 
     // jump from bootloader.
