@@ -40,7 +40,7 @@ void mthread_barrier_wait(void* handle)
 void mthread_barrier_destroy(void* handle)
 {
     int *id = (int *)handle;
-    sys_barrier_op(*id, DESTROY);
+    sys_barrier_op(*id, BARRIER_DESTROY);
 }
 
 void mthread_semaphore_init(void* handle, int val)
@@ -65,5 +65,5 @@ void mthread_semaphore_down(void* handle)
 void mthread_semaphore_destroy(void* handle)
 {
     int *id = (int *)handle;
-    sys_semaphore_op(*id, DESTROY);
+    sys_semaphore_op(*id, SEMAPHORE_DESTROY);
 }

@@ -1,6 +1,6 @@
 #include <screen.h>
 #include <common.h>
-#include <stdio.h>
+#include <os/stdio.h>
 #include <os/string.h>
 #include <os/lock.h>
 #include <os/sched.h>

@@ -44,10 +44,15 @@
 
 extern void ret_from_exception();
 extern void __global_pointer$();
-list_head ready_queue, block_queue, sleep_queue;
 
 uint64_t kernel_stack[NUM_MAX_TASK];
 uint64_t user_stack[NUM_MAX_TASK];
+
+list_head ready_queue;
+list_head sleep_queue;
+
+
+int find_freepcb();
 
 static void init_pcb_stack(
     ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point, void *arg,
@@ -77,7 +82,7 @@ static void init_pcb_stack(
     switchto_context_t *st_regs = (switchto_context_t *)pcb->kernel_sp;
 
     // Set ra & sp
-    st_regs->regs[0] = &ret_from_exception;
+    st_regs->regs[0] = (reg_t)&ret_from_exception;
     st_regs->regs[1] = user_stack;
     for (i = 2; i < 14; i++)
     {
@@ -88,7 +93,7 @@ static void init_pcb_stack(
 pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
     int i = find_freepcb();
     if (i == -1) {
-        prints("> [ERROR] Unable to spawn another task.");
+        printf("> [ERROR] Unable to spawn another task.");
         return -1;
     }
     pcb[i].status = TASK_READY;
@@ -209,11 +214,7 @@ static void init_shell()
             // (QAQQQQQQQQQQQ)
             // If you do non-preemptive scheduling, you need to use it
             // to surrender control do_scheduler();
-#ifdef INTERRUPT
-            enable_interrupt();
-            __asm__ __volatile__("wfi\n\r" ::
-                                     :);
-#endif
+
 
 #ifdef NONPREEMPT
             do_scheduler();

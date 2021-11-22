@@ -4,8 +4,6 @@
 #include <os/sched.h>
 #include <type.h>
 
-LIST_HEAD(sleep_queue);
-
 uint64_t time_elapsed = 0;
 uint32_t time_base = 0;
 
@@ -45,24 +43,24 @@ void latency(uint64_t time)
 // Create a timer for current_running process
 void create_timer(uint64_t ticks)
 {
-    disable_preempt();
+    //disable_preempt();
     current_running -> timeout_ticks = get_ticks() + ticks;
     enqueue(&sleep_queue, &(current_running -> list));
-    enable_preempt();
+    //enable_preempt();
 }
 
 // Check through the sleep queue 
 // to see if any of them should be waked up
 void check_timer()
 {
-    disable_preempt();
+    //disable_preempt();
     pcb_t *tmp;
     list_node_t *p = sleep_queue.next;
     while(!is_list_empty(&sleep_queue) && (p != &sleep_queue)){
         tmp = container_of(p, pcb_t, list);
-        if(get_ticks() >= tmp -> timeout_ticks)
-            do_unblock(p);  // Wake up
         p = p -> next;
+        if(get_ticks() >= tmp -> timeout_ticks)
+            do_unblock(&(tmp -> list));  // Wake up
     }
-    enable_preempt();
+    //enable_preempt();
 }

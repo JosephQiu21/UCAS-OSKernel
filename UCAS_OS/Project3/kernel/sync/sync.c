@@ -19,7 +19,6 @@ mutex_lock_t lock[MAX_LOCK_NUM];
 semaphore_t semaphore[MAX_SEMAPHORE_NUM];
 barrier_t barrier[MAX_BARRIER_NUM];
 
-
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
     list_init(&(lock -> block_queue));
@@ -42,7 +41,7 @@ void do_mutex_lock_release(mutex_lock_t *lock)
 {
     int i;
     for (i = 0; i < current_running -> num_lock; i++) {
-        if (current_running -> locks[i] = lock) {
+        if (current_running -> locks[i] == lock) {
             for (int j = i; j < current_running -> num_lock; j++)
                 current_running -> locks[j] = current_running -> locks[j + 1];
             current_running -> num_lock--;
@@ -79,24 +78,21 @@ void mutex_op(int handle, int op){
 }
 
 int lock_fetchhash(int key){
-    for (int i = 0; i < MAX_LOCK_NUM; i++){
+    for (int i = 0; i < MAX_LOCK_NUM; i++)
         if (lock_hash[i] == key) return i;
-        else return -1;
-    }
+    return -1;
 }
 
 int semaphore_fetchhash(int key){
-    for (int i = 0; i < MAX_SEMAPHORE_NUM; i++){
+    for (int i = 0; i < MAX_SEMAPHORE_NUM; i++)
         if (semaphore_hash[i] == key) return i;
-        else return -1;
-    }
+    return -1;
 }
 
 int barrier_fetchhash(int key){
-    for (int i = 0; i < MAX_BARRIER_NUM; i++){
+    for (int i = 0; i < MAX_BARRIER_NUM; i++)
         if (barrier_hash[i] == key) return i;
-        else return -1;
-    }
+    return -1;
 }
 
 void do_semaphore_init(semaphore_t *sem, int val){
@@ -139,11 +135,11 @@ int semaphore_get(int key){
 
 void semaphore_op(int handle, int op){
     if (op == DOWN)
-        do_semaphore_down(&barrier[handle]);
+        do_semaphore_down(&semaphore[handle]);
     else if (op == UP)
-        do_semaphore_up(&barrier[handle]);
-    else if (op == DESTROY)
-        do_semaphore_destroy(&barrier[handle]);
+        do_semaphore_up(&semaphore[handle]);
+    else if (op == SEMAPHORE_DESTROY)
+        do_semaphore_destroy(&semaphore[handle]);
 }
 
 void do_barrier_init(barrier_t *bar, int count){
@@ -188,6 +184,6 @@ int barrier_get(int key){
 void barrier_op(int handle, int op){
     if (op == WAIT)
         do_barrier_wait(&barrier[handle]);
-    else
+    else if (op == BARRIER_DESTROY)
         do_barrier_destroy(&barrier[handle]);
 }

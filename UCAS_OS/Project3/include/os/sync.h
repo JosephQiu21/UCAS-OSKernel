@@ -35,12 +35,12 @@
 enum semaphore_op{
     UP,
     DOWN,
-    DESTROY
+    SEMAPHORE_DESTROY
 };
 
 enum barrier_op{
     WAIT,
-    DESTROY
+    BARRIER_DESTROY
 };
 
 typedef struct semaphore
@@ -58,26 +58,26 @@ typedef struct barrier
     int destoryed;
 } barrier_t;
 
-extern void do_semaphore_init(semaphore_t *sem, int val);
-extern void do_semaphore_up(semaphore_t *sem);
-extern void do_semaphore_down(semaphore_t *sem);
-extern void do_semaphore_destroy(semaphore_t *sem);
+void do_semaphore_init(semaphore_t *sem, int val);
+void do_semaphore_up(semaphore_t *sem);
+void do_semaphore_down(semaphore_t *sem);
+void do_semaphore_destroy(semaphore_t *sem);
 
-extern int semaphore_get(int key);
-extern void semaphore_op(int handle, int op);
-extern void semaphore_init(int handle, int val);
+int semaphore_get(int key);
+void semaphore_op(int handle, int op);
+void semaphore_init(int handle, int val);
 
-extern int semaphore_fetchhash(int key);
+int semaphore_fetchhash(int key);
 
-extern void do_barrier_init(barrier_t *bar, int count);
-extern void do_barrier_wait(barrier_t *bar);
-extern void do_barrier_destroy(barrier_t *bar);
+void do_barrier_init(barrier_t *bar, int count);
+void do_barrier_wait(barrier_t *bar);
+void do_barrier_destroy(barrier_t *bar);
 
-extern void barrier_init(int handle, int count)
-extern int barrier_get(int key);
-extern void barrier_op(int handle, int op);
+void barrier_init(int handle, int count);
+int barrier_get(int key);
+void barrier_op(int handle, int op);
 
-extern int barrier_fetchhash(int key);
+int barrier_fetchhash(int key);
 
 
 #endif

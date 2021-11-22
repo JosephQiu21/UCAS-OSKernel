@@ -18,8 +18,9 @@ void semaphore_add_task1(void)
 
     struct task_info subtask1 = {(uintptr_t)&semaphore_add_task2, USER_PROCESS};
     struct task_info subtask2 = {(uintptr_t)&semaphore_add_task3, USER_PROCESS};
-    sys_spawn(&subtask1, NULL, AUTO_CLEANUP_ON_EXIT);
-    sys_spawn(&subtask2, NULL, AUTO_CLEANUP_ON_EXIT);
+    pid_t pids[2];
+    pids[0] = sys_spawn(&subtask1, NULL, AUTO_CLEANUP_ON_EXIT);
+    pids[1] = sys_spawn(&subtask2, NULL, AUTO_CLEANUP_ON_EXIT);
 
     for (i = 0; i < 10; i++)
     {
@@ -33,6 +34,9 @@ void semaphore_add_task1(void)
 
         sys_sleep(1);
     }
+
+    for (int i = 0; i < 2; ++i)
+        sys_waitpid(pids[i]);
 
     mthread_semaphore_destroy(&semaphore);
 

@@ -51,6 +51,6 @@ void do_mutex_lock_acquire(mutex_lock_t *lock);
 void do_mutex_lock_release(mutex_lock_t *lock);
 
 int mutex_get(int key);
-int mutex_op(int handle, int op);
-int fetchhash(int key);
+void mutex_op(int handle, int op);
+int lock_fetchhash(int key);
 #endif

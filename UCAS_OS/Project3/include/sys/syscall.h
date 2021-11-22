@@ -42,6 +42,7 @@ void sys_reflush();
 
 long sys_get_timebase();
 long sys_get_tick();
+uint32_t sys_get_wall_time(uint32_t *time_elapsed);
 
 void sys_yield();
 
@@ -51,7 +52,15 @@ int sys_kill(pid_t pid);
 int sys_waitpid(pid_t pid);
 void sys_process_show(void);
 void sys_screen_clear(void);
-pid_t sys_getpid();
-int sys_get_char();
+pid_t sys_getpid(void);
+int sys_get_char(void);
+void sys_serial_write(char c);
+char sys_read(void);
+int sys_semaphore_get(int key);
+void sys_semaphore_init(int id, int val);
+void sys_semaphore_op(int id, int op);
+int sys_barrier_get(int key);
+void sys_barrier_init(int id, int count);
+void sys_barrier_op(int id, int op);
 
 #endif

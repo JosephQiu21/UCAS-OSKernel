@@ -17,8 +17,6 @@ pcb_t pid0_pcb = {
     .preempt_count = 0
 };
 
-LIST_HEAD(ready_queue);
-
 /* current running task PCB */
 pcb_t * volatile current_running;
 
@@ -74,11 +72,8 @@ void do_unblock(list_node_t *pcb_node)
     pcb_t *task = container_of(pcb_node, pcb_t, list);
     delete_item(pcb_node);
     task -> status = TASK_READY;
-    enqueue(&ready_queue, &(task -> list));
+    enqueue(&ready_queue, pcb_node);
 }
-
-
-
 
 int do_kill(pid_t pid){
     pcb_t *killed_pcb = &pcb[pid - 1];
@@ -107,7 +102,6 @@ int do_kill(pid_t pid){
     killed_pcb -> status = (killed_pcb -> mode == ENTER_ZOMBIE_ON_EXIT) ? TASK_ZOMBIE : TASK_EXITED;
 
     killed_pcb -> pid = 0;
-    delete_item(&(killed_pcb -> list));
 
     if (killed_pcb == current_running)
         do_scheduler();
@@ -121,12 +115,9 @@ pid_t do_getpid() {
 
 // Add current running to waiting list of pid
 int do_waitpid(pid_t pid){
-    if (pcb[pid - 1].status != TASK_EXITED && pcb[pid - 1].status != TASK_ZOMBIE){
-        if (pcb[pid - 1].status != TASK_ZOMBIE)
-            do_block(&(current_running -> list), &(pcb[pid - 1].wait_list));
-
-        return pid;
-    }
+    if (pcb[pid - 1].status != TASK_EXITED && pcb[pid - 1].status != TASK_ZOMBIE)
+        do_block(&(current_running -> list), &(pcb[pid - 1].wait_list));
+    return pid;
 }
 
 void do_exit(){

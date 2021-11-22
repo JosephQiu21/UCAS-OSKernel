@@ -20,7 +20,7 @@ void test_affinity(void)
     struct task_info task_test = {(uintptr_t)&integer_test_task, USER_PROCESS};
     pid_t pids[INTEGER_TEST_NUM] = {0};
     for (int i = 0; i < INTEGER_TEST_NUM; ++i) {
-        pids[i] = sys_spawn(&task_test, 2 + i, ENTER_ZOMBIE_ON_EXIT);
+        pids[i] = sys_spawn(&task_test, (void *)(2 + i), ENTER_ZOMBIE_ON_EXIT);
         printf("%d, ", pids[i]);
     }
     printf("}\n\r");

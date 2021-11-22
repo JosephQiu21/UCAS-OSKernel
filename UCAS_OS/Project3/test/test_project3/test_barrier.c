@@ -23,6 +23,8 @@ void test_barrier(void)
                             ENTER_ZOMBIE_ON_EXIT);
     }
 
+    while(1);
+
     for (int i = 0; i < NUM_TB; ++i) {
         sys_waitpid(pids[i]);
     }

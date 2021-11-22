@@ -22,14 +22,18 @@ void enqueue(list_head *list, list_node_t *item){
 
 // Pop a node from list head
 list_node_t * dequeue(list_head *list){
+    if (list -> next == list) return NULL;
     list_node_t *data = list -> next;
     list -> next = list -> next -> next;
     list -> next -> prev = list;
+    data -> prev = data -> next = NULL;
     return data;
 }
 
 void delete_item(list_node_t *item){
-    item -> prev -> next = item -> next;
-    item -> next -> prev = item -> prev;
-    item -> prev = item -> next = NULL;
+    if (item -> prev && item -> next) {
+        item -> prev -> next = item -> next;
+        item -> next -> prev = item -> prev;
+        item -> prev = item -> next = NULL;
+    }
 }

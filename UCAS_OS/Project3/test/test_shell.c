@@ -119,7 +119,7 @@ pid_t shell_exec(char *task_id){
     int pid = -1;
     if (id >= num_test_tasks){
         printf("> [ERROR] Task not found!\n");
-        return;
+        return 0;
     }
     if (pid = sys_spawn(test_tasks[id], NULL, 1))
         printf("> Task execution succeed! PID: %d, MODE: %s\n", pid, "AUTO_CLEANUP_ON_EXIT");
