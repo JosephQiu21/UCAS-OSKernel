@@ -1,0 +1,9 @@
+--- include/os/mm.h	2021-11-07 11:41:16.893268834 +0800
++++ include/os/mm.h	2020-11-15 19:29:28.000000000 +0800
+@@ -31,4 +31,5 @@
+ #define MEM_SIZE 32
+ #define PAGE_SIZE 4096 // 4K
+-#define INIT_KERNEL_STACK 0x50500000lu
++#define INIT_KERNEL_STACK 0xffffffc051000000lu
+ #define FREEMEM (INIT_KERNEL_STACK+PAGE_SIZE)
++#define USER_STACK_ADDR 0xf00010000lu
