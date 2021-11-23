@@ -39,8 +39,8 @@ struct task_info task_test_semaphore = {
 struct task_info task_test_barrier = {
     (uintptr_t)&test_barrier, USER_PROCESS};
     
-// struct task_info strserver_task = {(uintptr_t)&strServer, USER_PROCESS};
-// struct task_info strgenerator_task = {(uintptr_t)&strGenerator, USER_PROCESS};
+struct task_info strserver_task = {(uintptr_t)&strServer, USER_PROCESS};
+struct task_info strgenerator_task = {(uintptr_t)&strGenerator, USER_PROCESS};
 
 struct task_info task_test_multicore = {(uintptr_t)&test_multicore, USER_PROCESS};
 struct task_info task_test_affinity = {(uintptr_t)&test_affinity, USER_PROCESS};
@@ -48,8 +48,9 @@ struct task_info task_test_affinity = {(uintptr_t)&test_affinity, USER_PROCESS};
 static struct task_info *test_tasks[16] = {&task_test_waitpid,
                                            &task_test_semaphore,
                                            &task_test_barrier,
-                                           &task_test_multicore
-                                           // &strserver_task, &strgenerator_task
+                                           &task_test_multicore,
+                                           &strserver_task, 
+                                           &strgenerator_task
                                            };
 static int num_test_tasks = 8;
 

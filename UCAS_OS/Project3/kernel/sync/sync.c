@@ -205,8 +205,8 @@ int do_mbox_open(char *name){
     mbox_id++;
     mbox[mbox_id].opened = 1;
     mbox[mbox_id].index = 0;
-    list_init(&mbox[mbox_id].full_queue);
-    list_init(&mbox[mbox_id].empty_queue);
+    list_init(&(mbox[mbox_id].full_queue));
+    list_init(&(mbox[mbox_id].empty_queue));
 
     int j = 0;
     while(*name){
@@ -231,8 +231,8 @@ int do_mbox_send(int handle, void *msg, int msg_length){
     for(i = 0; i < msg_length; i++){
         mbox[handle].msg[mbox[handle].index++] = ((char *)msg)[i];
     }
-    while(!list_empty(&(mbox[handle].empty_queue))){
-        do_unblock(&(mbox[handle].empty_queue));
+    while(!is_list_empty(&(mbox[handle].empty_queue))){
+        do_unblock(dequeue(&(mbox[handle].empty_queue)));
     }
     return blocked;
 }
@@ -251,8 +251,8 @@ int do_mbox_recv(int handle, void *msg, int msg_length){
         mbox[handle].msg[i] = mbox[handle].msg[i + msg_length];
     }
     mbox[handle].index -= msg_length;
-    while(!list_empty(&(mbox[handle].full_queue))){
-        do_unblock(&(mbox[handle].full_queue));
+    while(!is_list_empty(&(mbox[handle].full_queue))){
+        do_unblock(dequeue(&(mbox[handle].full_queue)));
     }
     return blocked;
 }

@@ -23,11 +23,11 @@ SRC_MM	= ./kernel/mm/mm.c
 SRC_SYSCALL	= ./kernel/syscall/syscall.c
 SRC_LIBS	= ./libs/string.c ./libs/printk.c
 
-SRC_LIBC	= ./tiny_libc/printf.c ./tiny_libc/string.c ./tiny_libc/mthread.c ./tiny_libc/syscall.c ./tiny_libc/syscall.S ./tiny_libc/time.c ./tiny_libc/rand.c
+SRC_LIBC	= ./tiny_libc/printf.c ./tiny_libc/string.c ./tiny_libc/mthread.c ./tiny_libc/syscall.c ./tiny_libc/syscall.S ./tiny_libc/time.c ./tiny_libc/rand.c ./tiny_libc/mailbox.c
 
 SRC_TEST	= ./test/test.c ./test/test_shell.c
 SRC_TEST2	= ./test/test_project2/test_scheduler.c ./test/test_project2/test_sleep.c ./test/test_project2/test_timer.c ./test/test_project2/test_lock.c
-SRC_TEST3   = ./test/test_project3/test_wait.c ./test/test_project3/test_semaphore.c ./test/test_project3/test_multicore.c ./test/test_project3/test_kill.c ./test/test_project3/test_affinity.c ./test/test_project3/test_barrier.c
+SRC_TEST3   = ./test/test_project3/test_wait.c ./test/test_project3/test_semaphore.c ./test/test_project3/test_multicore.c ./test/test_project3/test_kill.c ./test/test_project3/test_affinity.c ./test/test_project3/test_barrier.c ./test/test_project3/test_mailbox.c
 
 
 SRC_MAIN	= ${SRC_ARCH} ${SRC_INIT} ${SRC_INT} ${SRC_DRIVER} ${SRC_SYNC} ${SRC_SCHED} ${SRC_MM} ${SRC_SYSCALL} ${SRC_LIBS} ${SRC_LIBC} ${SRC_TEST} ${SRC_TEST2} ${SRC_TEST3}

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <include/mailbox.h>
+#include <mailbox.h>
 #include <sys/syscall.h>
 
 
@@ -55,11 +55,11 @@ void strServer(void)
     int64_t correctRecvBytes = 0;
     int64_t errorRecvBytes = 0;
     int64_t blockedCount = 0;
-    int clientPos = 1;
+    int clientPos = 2;
 
-    mailbox_t *mq = mbox_open("str-message-queue");
-    mailbox_t *posmq = mbox_open("pos-message-queue");
-    sys_move_cursor(0, 0);
+    mailbox_t mq = mbox_open("str-message-queue");
+    mailbox_t posmq = mbox_open("pos-message-queue");
+    sys_move_cursor(1, 1);
     printf("[Server] server started");
     sys_sleep(1);
 
@@ -75,7 +75,7 @@ void strServer(void)
             errorRecvBytes += header.length;
         }
 
-        sys_move_cursor(0, 0);
+        sys_move_cursor(1, 1);
         printf("[Server]: recved msg from %d (blocked: %ld, correctBytes: %ld, errorBytes: %ld)",
               header.sender, blockedCount, correctRecvBytes, errorRecvBytes);
 
@@ -88,7 +88,7 @@ void strServer(void)
     }
 }
 
-int clientSendMsg(mailbox_t *mq, const char* content, int length)
+int clientSendMsg(mailbox_t mq, const char* content, int length)
 {
     int i;
     char msgBuffer[MAX_MBOX_LENGTH] = {0};
@@ -118,8 +118,8 @@ void generateRandomString(char* buf, int len)
 
 void strGenerator(void)
 {
-    mailbox_t *mq = mbox_open("str-message-queue");
-    mailbox_t *posmq = mbox_open("pos-message-queue");
+    mailbox_t mq = mbox_open("str-message-queue");
+    mailbox_t posmq = mbox_open("pos-message-queue");
 
     int len = 0;
     int strBuffer[MAX_MBOX_LENGTH - sizeof(struct MsgHeader)];
@@ -129,7 +129,7 @@ void strGenerator(void)
     int blocked = 0;
     int64_t bytes = 0;
 
-    sys_move_cursor(0, position);
+    sys_move_cursor(1, position);
     printf("[Client %d] server started", position);
     sys_sleep(1);
     for (;;)
@@ -139,7 +139,7 @@ void strGenerator(void)
         blocked += clientSendMsg(mq, strBuffer, len);
         bytes += len;
 
-        sys_move_cursor(0, position);
+        sys_move_cursor(1, position);
         printf("[Client %d] send bytes: %ld, blocked: %d", position,
             bytes, blocked);
         sys_sleep(1);

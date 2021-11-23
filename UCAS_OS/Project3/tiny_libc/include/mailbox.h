@@ -8,9 +8,9 @@
 
 typedef int mailbox_t;
 
-mailbox_t mbox_open(char *);
-void mbox_close(mailbox_t);
-int mbox_send(mailbox_t, void *, int);
-int mbox_recv(mailbox_t, void *, int);
+mailbox_t mbox_open(char *name);
+void mbox_close(mailbox_t mailbox);
+int mbox_send(mailbox_t mailbox, void *msg, int msg_length);
+int mbox_recv(mailbox_t mailbox, void *msg, int msg_length);
 
 #endif
