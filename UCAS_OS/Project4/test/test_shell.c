@@ -32,40 +32,19 @@
 #include <stdio.h>
 #include <stdint.h>
 
-struct task_info task_test_waitpid = {
-    (uintptr_t)&wait_exit_task, USER_PROCESS};
-struct task_info task_test_semaphore = {
-    (uintptr_t)&semaphore_add_task1, USER_PROCESS};
-struct task_info task_test_barrier = {
-    (uintptr_t)&test_barrier, USER_PROCESS};
-    
-struct task_info strserver_task = {(uintptr_t)&strServer, USER_PROCESS};
-struct task_info strgenerator_task = {(uintptr_t)&strGenerator, USER_PROCESS};
-
-struct task_info task_test_multicore = {(uintptr_t)&test_multicore, USER_PROCESS};
-struct task_info task_test_affinity = {(uintptr_t)&test_affinity, USER_PROCESS};
-
-static struct task_info *test_tasks[16] = {&task_test_waitpid,
-                                           &task_test_semaphore,
-                                           &task_test_barrier,
-                                           &task_test_multicore,
-                                           &strserver_task, 
-                                           &strgenerator_task
-                                           };
-static int num_test_tasks = 8;
-
 #define SHELL_BEGIN 25
-#define NUM_CMD 7
+#define NUM_CMD 8
 
-typedef void (*function)(void *arg0, void *arg1);
+typedef void (*function)(void *arg0, void *arg1, void *arg2, void *arg3);
 
 void shell_help();
 void shell_man(char *cmd);
-pid_t shell_exec(char *task_id);
+pid_t shell_exec(char *proc, char *arg1, char *arg2, char* arg3);
 void shell_kill(char *pid);
 void shell_clear();
 void shell_ps();
 void shell_exit();
+void shell_ls();
 
 struct{
     char *name;
@@ -76,11 +55,12 @@ struct{
 } cmd_table [] = {
     {"man", "Manual for each command", "man [command]", &shell_man, 1},
     {"help", "Show all supported commands", "help [NO ARG]", &shell_help, 0},
-    {"exec", "Execute task n", "exec [task id]", &shell_exec, 1},
+    {"exec", "Execute task", "exec [task name] ([ARG0]) ([ARG1]) ([ARG2])", &shell_exec, 1},
     {"kill", "Kill process n", "kill [pid]", &shell_kill, 1},
     {"clear", "Clear the screen", "clear [NO ARG]", &shell_clear, 0},
     {"ps", "Show Process Table", "ps [NO ARG]", &shell_ps, 0},
-    {"exit", "Exit current process", "exit [NO ARG], &shell_exit, 0"}
+    {"exit", "Exit current process", "exit [NO ARG], &shell_exit, 0"},
+    {"ls", "List all executables", "ls [NO ARG]", &shell_ls, 0}
 };
 
 int atoi(char *c){
@@ -101,6 +81,10 @@ void shell_help(){
     }
 }
 
+void shell_ls() {
+    sys_ls();
+}
+
 void shell_man(char *cmd){
     int cmd_id = -1;
     for (int i = 0; i < NUM_CMD; i++) {
@@ -115,14 +99,17 @@ void shell_man(char *cmd){
     }
 }
 
-pid_t shell_exec(char *task_id){
-    int id = atoi(task_id);
-    int pid = -1;
-    if (id >= num_test_tasks){
-        printf("> [ERROR] Task not found!\n");
-        return 0;
-    }
-    if (pid = sys_spawn(test_tasks[id], NULL, 1))
+pid_t shell_exec(char *proc, char *arg0, char *arg1, char* arg2){
+    int argc = 1;
+    if (strlen(arg0) != 0)
+        argc ++;
+    if (strlen(arg1) != 0)
+        argc ++;
+    if (strlen(arg2) != 0)
+        argc ++;
+    char *argv[] = {arg0, arg1, arg2};
+    pid_t pid = sys_exec(proc, argc, argv, 1);
+    if (pid > 0)
         printf("> Task execution succeed! PID: %d, MODE: %s\n", pid, "AUTO_CLEANUP_ON_EXIT");
     return pid;
 }
@@ -130,8 +117,7 @@ pid_t shell_exec(char *task_id){
 void shell_kill(char *pid){
     pid_t id = atoi(pid);
     if (sys_kill(id))
-        printf("> Kill process succeed!\n");
-    
+        printf("> Kill process succeed!\n");   
 }
 
 void shell_clear(){
@@ -195,7 +181,7 @@ void parse(char *cmd){
     return;
 }
 
-void test_shell()
+void main()
 {
     sys_screen_clear();
     sys_move_cursor(1, SHELL_BEGIN);

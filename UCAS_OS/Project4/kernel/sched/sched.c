@@ -7,6 +7,7 @@
 #include <screen.h>
 #include <stdio.h>
 #include <assert.h>
+#include <pgtable.h>
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
@@ -20,8 +21,88 @@ pcb_t pid0_pcb = {
 /* current running task PCB */
 pcb_t * volatile current_running;
 
-/* global process id */
-pid_t process_id = 1;
+
+int match_elf(char *file_name)
+{
+    for (int i = 1; i < 3; i++)
+        if (kstrcmp(file_name, elf_files[i].file_name) == 0)
+            return i;
+    return -1;
+}
+
+pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
+    // Match ELF file
+    if (match_elf(file_name) == -1) {
+        prints("> Error 404: Program `%s` not found.\n", file_name);
+        return -1;
+    }
+
+    int i = find_freepcb();
+    if (i == -1) {
+        printf("> [ERROR] Unable to execute another task.");
+        return -1;
+    }
+
+    pcb_t *new_pcb = &pcb[i];
+
+    new_pcb -> pgdir = allocPage();
+    share_pgtable(new_pcb -> pgdir, pa2kva(PGDIR_PA));
+
+    new_pcb -> kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, KERNEL_MODE) + PAGE_SIZE;
+    new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, USER_MODE) + PAGE_SIZE - 0x100;
+
+    // Copy new arguments to new user stack
+    uintptr_t new_argv_base = USER_STACK_ADDR - 0x100;
+    uint64_t *new_argv = new_pcb -> user_sp;
+    for (i = 0; i < argc; i++) {
+        *(new_argv + i) = (uint64_t)(new_argv_base + 0x10 * (i + 1));
+        memcpy((char *)(new_pcb -> user_sp + 0x10 * (i + 1)), argv[i], 0x10);
+    }
+
+    enqueue(&ready_queue, &new_pcb -> list);
+
+    list_init(&new_pcb -> wait_list);
+
+    new_pcb -> pid = process_id++;
+
+    new_pcb -> type = USER_PROCESS;
+    new_pcb -> status = TASK_READY;
+    new_pcb -> mode = mode;
+
+    new_pcb->cursor_x = 1;
+    new_pcb->cursor_y = 1;
+
+    new_pcb -> num_lock = 0;
+
+    // Load elf file
+    int elf_length;
+    char *elf_binary;
+    get_elf_file(file_name, &elf_binary, &elf_length);
+    uintptr_t elf_entry = load_elf(elf_binary, elf_length, new_pcb -> pgdir, elf_alloc_page_helper);
+
+    init_pcb_stack(new_pcb -> kernel_sp, new_pcb -> user_sp, elf_entry, new_pcb, argc, new_argv_base);
+
+    // Allocate one page of kernel stack 
+    page_t *kernel_stack = (page_t *)kmalloc(sizeof(page_t));
+    kernel_stack -> kva = new_pcb -> kernel_sp - PAGE_SIZE;
+    kernel_stack -> pa = kva2pa(kernel_stack -> kva);
+    list_init(&kernel_stack -> list);
+
+    // Allocate one page of user stack
+    page_t *user_stack = (page_t *)kmalloc(sizeof(page_t));
+    user_stack -> kva = new_pcb -> kernel_sp - PAGE_SIZE;
+    user_stack -> pa = kva2pa(user_stack -> kva);
+    list_init(&user_stack -> list);
+
+    // Add them into page list of pcb
+    list_init(&new_pcb -> page_list);
+    enqueue(&new_pcb -> page_list, &kernel_stack -> list);
+    enqueue(&new_pcb -> page_list, &user_stack -> list);
+
+    return new_pcb -> pid;
+}
+
+
 
 void do_scheduler(void)
 {
@@ -44,12 +125,16 @@ void do_scheduler(void)
     vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
     screen_cursor_x = current_running->cursor_x;
     screen_cursor_y = current_running->cursor_y;
+
+    uintptr_t ppn = kva2pa(current_running -> pgdir) >> NORMAL_PAGE_SHIFT;
+    set_satp(SATP_MODE_SV39, current_running -> pid, ppn);
+    local_flush_tlb_all();
+
     switch_to(tmp, current_running);
 }
 
 void do_sleep(uint32_t sleep_time)
 {
-    // TODO: sleep(seconds)
     // note: you can assume: 1 second = `timebase` ticks
     // 1. block the current_running
     current_running -> status = TASK_BLOCKED;
@@ -103,6 +188,8 @@ int do_kill(pid_t pid){
 
     killed_pcb -> pid = 0;
 
+    freePage(&(killed_pcb -> page_list));
+
     if (killed_pcb == current_running)
         do_scheduler();
     
@@ -140,6 +227,8 @@ void do_exit(){
 
     exited_pcb -> pid = 0;
 
+    freePage(&(exited_pcb -> page_list));
+
     do_scheduler();
 }
 
@@ -153,4 +242,13 @@ void do_process_show() {
         }
     }
     
+}
+
+void do_ls()
+{
+    for (int i = 1; i < ELF_FILE_NUM; i++)
+    {
+        prints("%s ", elf_files[i].file_name);
+    }
+    prints("\n");
 }

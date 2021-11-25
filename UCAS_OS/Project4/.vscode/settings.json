@@ -5,6 +5,13 @@
         "unistd.h": "c",
         "os.h": "c",
         "test3.h": "c",
-        "lock.h": "c"
+        "lock.h": "c",
+        "syscall_number.h": "c",
+        "mm.h": "c",
+        "type.h": "c",
+        "elf.h": "c",
+        "sched.h": "c",
+        "list.h": "c",
+        "screen.h": "c"
     }
 }

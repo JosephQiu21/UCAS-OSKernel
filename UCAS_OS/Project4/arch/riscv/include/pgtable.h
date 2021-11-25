@@ -90,49 +90,66 @@ static inline void set_satp(
 
 typedef uint64_t PTE;
 
+#define KVA_OFFSET 0xffffffc000000000
+#define PFN_MASK ((1lu << _PAGE_PFN_SHIFT) - 1)
+#define VPN_MASK ((1lu << PPN_BITS) - 1)
+
+// Kernel virtual address -> Physical address: linear mapping
+// OFFSET: 0xffffffc000000000
 static inline uintptr_t kva2pa(uintptr_t kva)
 {
-    // TODO:
+    return kva - KVA_OFFSET;
 }
 
+// Physical address -> Kernle virtual address
 static inline uintptr_t pa2kva(uintptr_t pa)
 {
-    // TODO:
+    return pa + KVA_OFFSET;
 }
 
+// Get physical address from PTE
 static inline uint64_t get_pa(PTE entry)
 {
-    // TODO:
+    return (entry >> _PAGE_PFN_SHIFT) << NORMAL_PAGE_SHIFT;
 }
 
+// Look up page directory at `pgdir_va`, get physical address, then return KVA
 static inline uintptr_t get_kva_of(uintptr_t va, uintptr_t pgdir_va)
 {
-    // TODO:
+    
 }
 
 /* Get/Set page frame number of the `entry` */
 static inline long get_pfn(PTE entry)
 {
-    // TODO:
+    return entry >> _PAGE_PFN_SHIFT;
 }
+
 static inline void set_pfn(PTE *entry, uint64_t pfn)
 {
-    // TODO:
+    // Clear
+    *entry &= PFN_MASK;
+    // Set 
+    *entry |= (pfn << _PAGE_PFN_SHIFT);
 }
 
 /* Get/Set attribute(s) of the `entry` */
 static inline long get_attribute(PTE entry, uint64_t mask)
 {
-    // TODO:
+    return entry & PFN_MASK;
 }
 static inline void set_attribute(PTE *entry, uint64_t bits)
 {
-    // TODO:
+    // Clear
+    *entry &= ~PFN_MASK;
+    // Set
+    *entry |= bits;
 }
 
+// A page directory takes one page
 static inline void clear_pgdir(uintptr_t pgdir_addr)
 {
-    // TODO:
+    kmemset((void *)pgdir_addr, 0, NORMAL_PAGE_SIZE);
 }
 
 #endif  // PGTABLE_H

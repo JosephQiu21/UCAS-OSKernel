@@ -124,6 +124,10 @@ typedef struct pcb
     /* Lock */
     int num_lock;
     mutex_lock_t *locks[10];
+
+    /* Page Directory */
+    uintptr_t pgdir;
+    list_head page_list;
 } pcb_t;
 
 /* task information, used to init PCB */
@@ -139,13 +143,14 @@ extern list_head sleep_queue;
 
 /* current running task PCB */
 extern pcb_t * volatile current_running;
-// extern pcb_t * volatile current_running[NR_CPUS];
-extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
 // extern pcb_t kernel_pcb[NR_CPUS];
 extern pcb_t pid0_pcb;
 extern const ptr_t pid0_stack;
+
+extern pid_t process_id;
+
 
 extern void switch_to(pcb_t *prev, pcb_t *next);
 void do_scheduler(void);
@@ -163,5 +168,6 @@ extern void do_process_show();
 extern pid_t do_getpid();
 extern pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode);
 extern void do_show_exec();
+extern void do_ls();
  
 #endif

@@ -6,6 +6,8 @@
 #include <asm.h>
 #include <csr.h>
 
+.equ boot_stack_top_base, 0x50200000
+
 .section ".entry_function","ax"
 ENTRY(_start)
   /* Mask all interrupts */
@@ -34,15 +36,10 @@ clear_bss:
   add a3, a3, RISCV_SZPTR
   blt a3, a4, clear_bss
 clear_bss_done:
-
   /* setup C environment */
-  la tp, pid0_pcb
-  lw sp, pid0_stack
+  li sp, boot_stack_top_base
   csrw CSR_SSCRATCH, x0
-
-  la a0, riscv_dtb
-  sd a1, (a0)
-
+  csrr a0, CSR_MHARTID
   call boot_kernel
 
 loop:

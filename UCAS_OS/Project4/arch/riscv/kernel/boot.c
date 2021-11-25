@@ -26,11 +26,13 @@ void map_page(uint64_t va, uint64_t pa, PTE *pgdir)
     uint64_t vpn1 = (vpn2 << PPN_BITS) ^
                     (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
     if (pgdir[vpn2] == 0) {
-        // alloc a new second-level page directory
+        // alloc a new second-level page table
+        // One second-level page table takes one 4KB page
         set_pfn(&pgdir[vpn2], alloc_page() >> NORMAL_PAGE_SHIFT);
         set_attribute(&pgdir[vpn2], _PAGE_PRESENT);
         clear_pgdir(get_pa(pgdir[vpn2]));
     }
+    // pmd: pa of second-level page table
     PTE *pmd = (PTE *)get_pa(pgdir[vpn2]);
     set_pfn(&pmd[vpn1], pa >> NORMAL_PAGE_SHIFT);
     set_attribute(

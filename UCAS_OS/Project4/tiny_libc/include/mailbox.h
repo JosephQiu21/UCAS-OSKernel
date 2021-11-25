@@ -3,7 +3,6 @@
 
 #define MAX_MBOX_LENGTH (64)
 
-// TODO: please define mailbox_t;
 // mailbox_t is just an id of kernel's mail box.
 
 typedef int mailbox_t;

@@ -9,7 +9,6 @@
 
 handler_t irq_table[IRQC_COUNT];
 handler_t exc_table[EXCC_COUNT];
-uintptr_t riscv_dtb;
 
 void reset_irq_timer()
 {

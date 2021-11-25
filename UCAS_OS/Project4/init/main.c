@@ -36,27 +36,25 @@
 #include <os/lock.h>
 #include <os/syscall.h>
 #include <os/sync.h>
+#include <os/elf.h>
+#include <pgtable.h>
 #include <test.h>
 #include <csr.h>
-
-#define INTERRUPT
-// #define NONPREEMPT
 
 extern void ret_from_exception();
 extern void __global_pointer$();
 
-uint64_t kernel_stack[NUM_MAX_TASK];
-uint64_t user_stack[NUM_MAX_TASK];
+static LIST_HEAD(ready_queue);
+static LIST_HEAD(sleep_queue);
 
-list_head ready_queue;
-list_head sleep_queue;
-
+//list_head ready_queue;
+//list_head sleep_queue;
 
 int find_freepcb();
 
 static void init_pcb_stack(
-    ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point, void *arg,
-    pcb_t *pcb)
+    ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point,
+    pcb_t *pcb, void *argc, char *argv[])
 {
     int i;
 
@@ -67,16 +65,17 @@ static void init_pcb_stack(
         pt_regs->regs[i] = 0;
     }
     pt_regs->regs[1] = (reg_t)entry_point;
-    pt_regs->regs[2] = user_stack;
+    pt_regs->regs[2] = USER_STACK_ADDR - 0x100;
     pt_regs->regs[3] = (reg_t)__global_pointer$;
-    pt_regs->regs[10] = (reg_t)arg;
+    pt_regs->regs[10] = (reg_t)argc;
+    pt_regs->regs[11] = (reg_t)argv;
     pt_regs->sepc = entry_point;
-    pt_regs->sstatus = 0;
+    pt_regs->sstatus = SR_SUM;
     pt_regs->scause = 0;
     pt_regs->sbadaddr = 0;
 
     // Update kernel_sp in pcb
-    pcb->kernel_sp = kernel_stack - sizeof(regs_context_t) - sizeof(switchto_context_t);
+    pcb -> kernel_sp = kernel_stack - sizeof(regs_context_t) - sizeof(switchto_context_t);
 
     // set switch-to context
     switchto_context_t *st_regs = (switchto_context_t *)pcb->kernel_sp;
@@ -88,24 +87,51 @@ static void init_pcb_stack(
     {
         st_regs->regs[i] = 0;
     }
+
+    current_running = &pid0_pcb;
 }
 
-pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
-    int i = find_freepcb();
-    if (i == -1) {
-        printf("> [ERROR] Unable to spawn another task.");
-        return -1;
-    }
-    pcb[i].status = TASK_READY;
-    pcb[i].pid = i + 1;
-    pcb[i].mode = mode;
-    pcb[i].type = task -> type;
-    pcb[i].kernel_sp = kernel_stack[i];
-    pcb[i].user_sp = user_stack[i];
-    list_init(&pcb[i].wait_list);
-    init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, task -> entry_point, arg, &pcb[i]);
-    enqueue(&ready_queue, &(pcb[i].list));
-    return i + 1;
+// pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
+//     int i = find_freepcb();
+//     if (i == -1) {
+//         printf("> [ERROR] Unable to spawn another task.");
+//         return -1;
+//     }
+//     pcb[i].status = TASK_READY;
+//     pcb[i].pid = i + 1;
+//     pcb[i].mode = mode;
+//     pcb[i].type = task -> type;
+//     pcb[i].kernel_sp = kernel_stack[i];
+//     pcb[i].user_sp = user_stack[i];
+//     list_init(&pcb[i].wait_list);
+//     init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, task -> entry_point, arg, &pcb[i]);
+//     enqueue(&ready_queue, &(pcb[i].list));
+//     return i + 1;
+// }
+
+static void init_shell(){
+    /* pid/status/type */
+    pcb[0].pid = 1;
+    pcb[0].status = TASK_READY;
+    pcb[0].type = USER_PROCESS;
+
+    /* Page Directory */
+    pcb[0].pgdir = allocPage();
+    share_pgtable(pcb[0].pgdir, pa2kva(PGDIR_PA));
+
+    /* Register context */
+    pcb[0].kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, KERNEL_MODE) + PAGE_SIZE;
+    pcb[0].user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, USER_MODE) + PAGE_SIZE - 0x100;
+
+    /* Enqueue */
+    enqueue(&ready_queue, &pcb[0].list);
+
+    pcb[0].cursor_x = 1;
+    pcb[0].cursor_y = 1;
+
+    uintptr_t elf_entry = load_elf(_elf__test_test_shell_elf, _length__test_test_shell_elf, pcb[0].pgdir, elf_alloc_page_helper);
+    init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, elf_entry, &pcb[0], NULL, NULL);
+
 }
 
 int find_freepcb() {
@@ -117,27 +143,20 @@ int find_freepcb() {
     return -1;
 }
 
-void init_all_stack(){
-    int i;
-    for (i = 0; i < NUM_MAX_TASK; i++){
-        kernel_stack[i] = allocPage(1);
-        user_stack[i] = allocPage(1);
-    }
-}
 
-static void init_shell()
-{
-    list_init(&ready_queue);
-    list_init(&sleep_queue);
-    pcb[0].pid = 1;
-    pcb[0].status = TASK_READY;
-    pcb[0].type = USER_PROCESS;
-    pcb[0].kernel_sp = kernel_stack[0];
-    pcb[0].user_sp = user_stack[0];
-    init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, &test_shell, NULL, &pcb[0]);
-    enqueue(&ready_queue, &(pcb[0].list));
-    current_running = &pid0_pcb;
-}
+// static void init_shell()
+// {
+//     list_init(&ready_queue);
+//     list_init(&sleep_queue);
+//     pcb[0].pid = 1;
+//     pcb[0].status = TASK_READY;
+//     pcb[0].type = USER_PROCESS;
+//     pcb[0].kernel_sp = kernel_stack[0];
+//     pcb[0].user_sp = user_stack[0];
+//     init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, &test_shell, NULL, &pcb[0]);
+//     enqueue(&ready_queue, &(pcb[0].list));
+//     current_running = &pid0_pcb;
+// }
 
     void error_syscall(void)
     {
@@ -162,7 +181,7 @@ static void init_shell()
         syscall[SYSCALL_MUTEX_GET        ] = &mutex_get;
         syscall[SYSCALL_MUTEX_OP         ] = &mutex_op;
         syscall[SYSCALL_GET_WALL         ] = &get_wall_time;
-        syscall[SYSCALL_SPAWN            ] = &do_spawn;
+        // syscall[SYSCALL_SPAWN            ] = &do_spawn;
         syscall[SYSCALL_KILL             ] = &do_kill;
         syscall[SYSCALL_PS               ] = &do_process_show;
         syscall[SYSCALL_GETPID           ] = &do_getpid;
@@ -178,15 +197,15 @@ static void init_shell()
         syscall[SYSCALL_MBOX_CLOSE       ] = &do_mbox_close;
         syscall[SYSCALL_MBOX_SEND        ] = &do_mbox_send;
         syscall[SYSCALL_MBOX_RECV        ] = &do_mbox_recv;
+        syscall[SYSCALL_EXEC             ] = &do_exec;
+        syscall[SYSCALL_LS               ] = &do_ls;
     }
 
     // jump from bootloader.
     // The beginning of everything >_< ~~~~~~~~~~~~~~
     int main()
     {
-        init_all_stack();
-
-        // init Shell (-_-!)
+        // init shell (-_-!)
         init_shell();
         printk("> [INIT] Shell initialization succeeded.\n\r");
 
@@ -207,22 +226,14 @@ static void init_shell()
         init_screen();
         printk("> [INIT] SCREEN initialization succeeded.\n\r");
 
-        // TODO:
         // Setup timer interrupt and enable all interrupt
-#ifdef INTERRUPT
         sbi_set_timer(get_ticks() + get_time_base() / 1000);
-#endif
 
         while (1)
         {
             // (QAQQQQQQQQQQQ)
             // If you do non-preemptive scheduling, you need to use it
             // to surrender control do_scheduler();
-
-
-#ifdef NONPREEMPT
-            do_scheduler();
-#endif
         };
         return 0;
     }

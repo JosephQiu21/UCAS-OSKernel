@@ -39,6 +39,14 @@
 
 #include <type.h>
 
+#define LIST_HEAD_INIT(name) \
+    {                        \
+        &(name), &(name)     \
+    }
+
+#define LIST_HEAD(name) \
+    list_head name = LIST_HEAD_INIT(name)
+
 // double-linked list
 typedef struct list_node
 {

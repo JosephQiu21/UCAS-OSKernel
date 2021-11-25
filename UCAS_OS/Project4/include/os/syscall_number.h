@@ -73,5 +73,7 @@
 #define SYSCALL_MBOX_SEND 44
 #define SYSCALL_MBOX_RECV 45
 
+#define SYSCALL_EXEC 48
+#define SYSCALL_LS 49
 
 #endif

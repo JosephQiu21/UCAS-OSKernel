@@ -9,10 +9,10 @@
 .equ os_size_loc, 0x502001fc
 
 // 1. kernel address (move kernel to here ~)
-.equ kernel, 0x50200000
+.equ kernel, 0x50301000
 
 // 2. kernel main address (jmp here to start kernel main!)
-.equ kernel_main, 0x50200000
+.equ kernel_main, 0x50301000
 
 .text
 .global main
