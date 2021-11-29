@@ -9,13 +9,13 @@ static LIST_HEAD(freePageList);
 
 ptr_t allocPage()
 {
-    if (!is_list_empty(&freePageList)) {
-        page_t *page = container_of(dequeue(&freePageList), page_t, list);
-        return page -> kva;
-    }
-    // align PAGE_SIZE
-    ptr_t ret = ROUND(memCurr, PAGE_SIZE);
-    memCurr = ret + PAGE_SIZE;
+    // if (!is_list_empty(&freePageList)) {
+    //     page_t *page = container_of(dequeue(&freePageList), page_t, list);
+    //     return page -> kva;
+    // }
+    // // align PAGE_SIZE
+    // ptr_t ret = ROUND(memCurr, PAGE_SIZE);
+    memCurr += PAGE_SIZE;
     return memCurr;
 }
 

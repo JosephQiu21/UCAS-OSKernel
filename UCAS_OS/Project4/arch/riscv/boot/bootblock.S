@@ -2,79 +2,68 @@
 #include <asm/sbiasm.h>
 #include <csr.h>
 
-// #define BOOT_LOADER_SIG_OFFSET 0x1fe
-// #define OS_SIZE_LOC (BOOT_LOADER_SIG_OFFSET - 2)
-// #define OS_SIZE_LOC 0x1fc
-
 .equ os_size_loc, 0x502001fc
 
-// 1. kernel address (move kernel to here ~)
+// 1. kernel address (move kernel to here ~) 
 .equ kernel, 0x50301000
 
-// 2. kernel main address (jmp here to start kernel main!)
+// 2. kernel main address (jmp here to start kernel main!) 
 .equ kernel_main, 0x50301000
 
-.text
-.global main
-
+.text 
+.global main 
 main:
 	// fence on all memory and I/O
 	fence
 
-    // read os_size to s1
-    la s0, os_size_loc
-    lh s1, 0(s0)
 
-    // calculate bootblock target address
-    la s2, kernel
-    li t0, 0
-    // if(i >= os_size) goto done
-    bge t0, s1, done
-loop:
-    addi s2, s2, 512
-    addi t0, t0, 1
-    // if (i < os_size) goto loop
-    blt t0, s1, loop
-done: 
+	// Load the global pointer(can see gp in disassembly) 
+	.option push
+	.option norelax
+	la gp, __global_pointer$
+	.option pop
 
-    // copy bootblock to target address
-    addi a0, s2, 0
-    addi a1, zero, 1
-    addi a2, zero, 0
-    SBI_CALL SBI_SD_READ
-
-    fence.i
-
-    // jump to new bootblock and continue running
-    la t3, new
-    la t4, kernel
-    sub t3, t3, t4
-    add t3, t3, s2 
-    jr t3
-
-new:
-	// print a \n to avoid system output error...
+	// output a \n
 	li a0, 10
 	SBI_CALL SBI_CONSOLE_PUTCHAR
 
-	// 1) task1 call BIOS print string "It's a bootloader..."
-	la a0, msg
-	SBI_CALL SBI_CONSOLE_PUTSTR
-	
-	// 2) task2 call BIOS read kernel in SD card and jump to kernel start
-	// read SD card
-	la   s0, os_size_loc    // load address of section number
-	la   a0, kernel
-	lh   a1, 0(s0)
-	li   a2, 1
+	// your code 
+    la a0, msg
+    SBI_CALL SBI_CONSOLE_PUTSTR 
+    
+    la t0, os_size_loc
+	lh t0, (t0)         // number of all sectors
+	la a0, kernel       // kernel_addr    
+	li a1, 64           // 64 sectors a time   
+	li a2, 1            // start of first sector
+    move t1, a0              
+	move t2, a1
+    slli t2, t2, 9      // size: 64 * 512 B
+read_sectors:
+    bleu t0, a1, end_read_sectors
+	SBI_CALL SBI_SD_READ
+	add a0, t2, t1      // a0: start copy addr
+	move t1, a0        
+	add a2, a2, a1      // a2: start copy sector
+	sub t0, t0, a1      // t0: number of sectors left
+
+end_read_sectors:
+	move a1, t0
 	SBI_CALL SBI_SD_READ
 
+    // your code 
+    la a0, msg1
+    SBI_CALL SBI_CONSOLE_PUTSTR 
+
     fence.i
-	// jump to kernel code
-    la   t5, kernel_main
-    jr   t5
     
-// while(1) --> stop here
+    la t0, kernel_main
+    jr t0
+
+wait_for_wakeup:
+	wfi
+	j wait_for_wakeup 
+
 stop:
 	j stop
 	nop
@@ -83,3 +72,4 @@ stop:
 
 msg: .string "It's a bootloader...\n\r"
 
+msg1: .string "Bootloading finished!\n\r"

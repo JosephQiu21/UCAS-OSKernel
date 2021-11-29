@@ -175,7 +175,7 @@ void parse(char *cmd){
     }
 
     else {
-        cmd_table[cmd_id].func(arg[1], arg[2]);
+        cmd_table[cmd_id].func(arg[1], arg[2], arg[3], arg[4]);
     }
 
     return;

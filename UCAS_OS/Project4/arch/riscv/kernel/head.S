@@ -5,8 +5,10 @@
 
 #include <asm.h>
 #include <csr.h>
+#include <asm/sbidef.h>
+#include <asm/sbiasm.h>
 
-.equ boot_stack_top_base, 0x50200000
+.equ boot_stack_top_base, 0x50202000
 
 .section ".entry_function","ax"
 ENTRY(_start)
@@ -36,14 +38,18 @@ clear_bss:
   add a3, a3, RISCV_SZPTR
   blt a3, a4, clear_bss
 clear_bss_done:
+  la a0, msg2
+  SBI_CALL SBI_CONSOLE_PUTSTR 
   /* setup C environment */
   li sp, boot_stack_top_base
-  csrw CSR_SSCRATCH, x0
-  csrr a0, CSR_MHARTID
+  li a0, 0
   call boot_kernel
 
 loop:
   wfi
   j loop
 
+msg2: .string "Clear BSS done!\n\r"
+
 END(_start)
+

@@ -31,28 +31,27 @@
 #include <os/sched.h>
 #include <screen.h>
 #include <sbi.h>
-#include <stdio.h>
 #include <os/time.h>
 #include <os/lock.h>
 #include <os/syscall.h>
 #include <os/sync.h>
 #include <os/elf.h>
 #include <pgtable.h>
-#include <test.h>
 #include <csr.h>
+#include <user_programs.h>
 
 extern void ret_from_exception();
 extern void __global_pointer$();
 
-static LIST_HEAD(ready_queue);
-static LIST_HEAD(sleep_queue);
+LIST_HEAD(ready_queue);
+LIST_HEAD(sleep_queue);
 
 //list_head ready_queue;
 //list_head sleep_queue;
 
 int find_freepcb();
 
-static void init_pcb_stack(
+void init_pcb_stack(
     ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point,
     pcb_t *pcb, void *argc, char *argv[])
 {
@@ -110,6 +109,7 @@ static void init_pcb_stack(
 // }
 
 static void init_shell(){
+    extern pid_t process_id;
     /* pid/status/type */
     pcb[0].pid = 1;
     pcb[0].status = TASK_READY;
@@ -129,9 +129,10 @@ static void init_shell(){
     pcb[0].cursor_x = 1;
     pcb[0].cursor_y = 1;
 
-    uintptr_t elf_entry = load_elf(_elf__test_test_shell_elf, _length__test_test_shell_elf, pcb[0].pgdir, elf_alloc_page_helper);
+    uintptr_t elf_entry = load_elf(_elf___test_test_shell_elf, _length___test_test_shell_elf, pcb[0].pgdir, elf_alloc_page_helper);
     init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, elf_entry, &pcb[0], NULL, NULL);
 
+    current_running = &pid0_pcb;
 }
 
 int find_freepcb() {
@@ -143,6 +144,17 @@ int find_freepcb() {
     return -1;
 }
 
+void cancel_map()
+{
+    uintptr_t va = 0x50200000;
+    uintptr_t pgdir = 0xffffffc05e000000;
+    uintptr_t vpn2 = va >> (NORMAL_PAGE_SHIFT + 2 * PPN_BITS);
+    uintptr_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    PTE *first_level_pgdir = (PTE *)pgdir + vpn2;
+    PTE *last_level_pgdir = (PTE *)pa2kva(get_pa(*first_level_pgdir)) + vpn1;
+    *first_level_pgdir = 0;
+    *last_level_pgdir = 0;
+}
 
 // static void init_shell()
 // {
@@ -205,6 +217,7 @@ int find_freepcb() {
     // The beginning of everything >_< ~~~~~~~~~~~~~~
     int main()
     {
+        cancel_map();
         // init shell (-_-!)
         init_shell();
         printk("> [INIT] Shell initialization succeeded.\n\r");
@@ -227,7 +240,8 @@ int find_freepcb() {
         printk("> [INIT] SCREEN initialization succeeded.\n\r");
 
         // Setup timer interrupt and enable all interrupt
-        sbi_set_timer(get_ticks() + get_time_base() / 1000);
+        sbi_set_timer(get_ticks() + time_base / 1000);
+        enable_interrupt();
 
         while (1)
         {

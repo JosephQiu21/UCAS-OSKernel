@@ -28,6 +28,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * * * * * */
 
 #include <type.h>
+#include <os/list.h>
 
 typedef enum {
     KERNEL_MODE,

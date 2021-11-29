@@ -5,9 +5,10 @@
 #include <os/time.h>
 #include <os/irq.h>
 #include <screen.h>
-#include <stdio.h>
 #include <assert.h>
 #include <pgtable.h>
+#include <user_programs.h>
+#include <os/elf.h>
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
@@ -17,6 +18,8 @@ pcb_t pid0_pcb = {
     .user_sp = (ptr_t)pid0_stack,
     .preempt_count = 0
 };
+
+extern pid_t process_id = 1;
 
 /* current running task PCB */
 pcb_t * volatile current_running;
@@ -39,7 +42,7 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
 
     int i = find_freepcb();
     if (i == -1) {
-        printf("> [ERROR] Unable to execute another task.");
+        prints("> [ERROR] Unable to execute another task.");
         return -1;
     }
 

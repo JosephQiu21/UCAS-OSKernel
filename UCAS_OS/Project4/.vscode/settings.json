@@ -12,6 +12,10 @@
         "elf.h": "c",
         "sched.h": "c",
         "list.h": "c",
-        "screen.h": "c"
+        "screen.h": "c",
+        "typeinfo": "cpp",
+        "assert.h": "c",
+        "user_programs.h": "c",
+        "stdio.h": "c"
     }
 }

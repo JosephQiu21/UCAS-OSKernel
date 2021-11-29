@@ -67,6 +67,19 @@ void sys_semaphore_op(int id, int op);
 int sys_barrier_get(int key);
 void sys_barrier_init(int id, int count);
 void sys_barrier_op(int id, int op);
+
+int sys_mutex_get(int key);
+void sys_mutex_op(int id, int op);
+uint32_t sys_get_wall_time(uint32_t *time_elapsed);
+int sys_mbox_open(char *name);
+void sys_mbox_close(int id);
+int sys_mbox_send(int id, void *msg, int msg_length);
+int sys_mbox_recv(int id, void *msg, int msg_length);
+pid_t sys_exec(const char *file_name, int argc, char* argv[], spawn_mode_t mode);
+void sys_ls();
+
+
+
 #define BINSEM_OP_LOCK 0 // mutex acquire
 #define BINSEM_OP_UNLOCK 1 // mutex release
 

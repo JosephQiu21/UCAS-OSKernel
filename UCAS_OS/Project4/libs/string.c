@@ -1,5 +1,12 @@
 #include <os/string.h>
 
+void memcpy (uint8_t *dest, const uint8_t *src, uint32_t len)
+{
+    for (; len != 0; len--) {
+        *dest++ = *src++;
+    }
+}
+
 int kstrlen(const char *src)
 {
     int i;
@@ -63,4 +70,16 @@ char *kstrcat(char *dest, const char *src)
     *dest = '\0';
 
     return tmp;
+}
+
+int strcmp(const char *str1, const char *str2)
+{
+    while (*str1 && *str2) {
+        if (*str1 != *str2) {
+            return (*str1) - (*str2);
+        }
+        ++str1;
+        ++str2;
+    }
+    return (*str1) - (*str2);
 }

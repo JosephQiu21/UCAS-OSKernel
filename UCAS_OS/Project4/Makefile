@@ -25,8 +25,7 @@ SRC_ARCH	= $(ARCH_DIR)/kernel/trap.S $(ARCH_DIR)/kernel/entry.S $(ARCH_DIR)/kern
 SRC_DRIVER	= ./drivers/screen.c #./drivers/fdt.c
 SRC_INIT 	= ./init/main.c
 SRC_INT		= ./kernel/irq/irq.c
-SRC_LOCK	= ./kernel/locking/lock.c #./kernel/locking/futex.c ./kernel/locking/mailbox.c
-SRC_SCHED	= ./kernel/sched/sched.c ./kernel/sched/time.c ./kernel/sched/smp.c
+SRC_SCHED	= ./kernel/sched/sched.c ./kernel/sched/time.c ./kernel/sched/smp.c ./kernel/sched/list.c
 SRC_MM	= ./kernel/mm/mm.c
 SRC_SYSCALL	= ./kernel/syscall/syscall.c
 SRC_LIBS	= ./libs/string.c ./libs/printk.c
@@ -39,7 +38,7 @@ SRC_LIBC_C	= $(filter %.c,$(SRC_LIBC))
 SRC_USER	= ./test/test_shell.elf ./test/rw.elf ./test/fly.elf #./test/consensus.elf ./test/lock.elf ./test/mailbox.elf
 
 SRC_SYNC    = ./kernel/sync/sync.c
-SRC_MAIN	= ${SRC_ARCH} ${SRC_INIT} ${SRC_INT} ${SRC_DRIVER} ${SRC_LOCK} ${SRC_SCHED} ${SRC_MM} ${SRC_SYSCALL} ${SRC_LIBS} ${SRC_SYNC}
+SRC_MAIN	= ${SRC_ARCH} ${SRC_INIT} ${SRC_INT} ${SRC_DRIVER} ${SRC_SCHED} ${SRC_MM} ${SRC_SYSCALL} ${SRC_LIBS} ${SRC_SYNC}
 
 SRC_IMAGE	= ./tools/createimage.c
 SRC_ELF2CHAR	= ./tools/elf2char.c
@@ -104,3 +103,4 @@ floppy:
 
 asm:
 	${OBJDUMP} -d main > kernel.txt
+	${OBJDUMP} -d kernelimage > kernelimage.txt

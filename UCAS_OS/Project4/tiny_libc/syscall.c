@@ -1,5 +1,4 @@
 #include <os/syscall_number.h>
-#include <screen.h>
 #include <stdint.h>
 #include <os/sched.h>
 
