@@ -81,13 +81,13 @@ void init_pcb_stack(
 
     // Set ra & sp
     st_regs->regs[0] = (reg_t)&ret_from_exception;
-    st_regs->regs[1] = user_stack;
+    // st_regs->regs[1] = user_stack;
     for (i = 2; i < 14; i++)
     {
         st_regs->regs[i] = 0;
     }
-
-    current_running = &pid0_pcb;
+    pcb -> user_sp = USER_STACK_ADDR - 0x100;
+   // current_running = &pid0_pcb;
 }
 
 // pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
@@ -120,8 +120,13 @@ static void init_shell(){
     share_pgtable(pcb[0].pgdir, pa2kva(PGDIR_PA));
 
     /* Register context */
-    pcb[0].kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, KERNEL_MODE) + PAGE_SIZE;
-    pcb[0].user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, USER_MODE) + PAGE_SIZE - 0x100;
+    pcb[0].kernel_sp = allocPage() + PAGE_SIZE;
+    // allocPage() + PAGE_SIZE;
+    // alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, KERNEL_MODE);
+    pcb[0].user_sp = USER_STACK_ADDR - 0x100;
+    alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, USER_MODE);
+    // USER_STACK_ADDR - 0x100;
+    // alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, USER_MODE);
 
     /* Enqueue */
     enqueue(&ready_queue, &pcb[0].list);
@@ -144,9 +149,8 @@ int find_freepcb() {
     return -1;
 }
 
-void cancel_map()
+void cancel_map(uintptr_t va)
 {
-    uintptr_t va = 0x50200000;
     uintptr_t pgdir = 0xffffffc05e000000;
     uintptr_t vpn2 = va >> (NORMAL_PAGE_SHIFT + 2 * PPN_BITS);
     uintptr_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
@@ -217,7 +221,7 @@ void cancel_map()
     // The beginning of everything >_< ~~~~~~~~~~~~~~
     int main()
     {
-        cancel_map();
+        cancel_map(0x50000000);
         // init shell (-_-!)
         init_shell();
         printk("> [INIT] Shell initialization succeeded.\n\r");

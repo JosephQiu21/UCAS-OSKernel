@@ -92,7 +92,7 @@ typedef uint64_t PTE;
 
 #define KVA_OFFSET 0xffffffc000000000
 #define PFN_MASK ((1lu << _PAGE_PFN_SHIFT) - 1)
-#define VPN_MASK ((1lu << PPN_BITS) - 1)
+#define VPN_MASK ~((1lu << PPN_BITS) - 1)
 
 // Kernel virtual address -> Physical address: linear mapping
 // OFFSET: 0xffffffc000000000

@@ -16,6 +16,7 @@
         "typeinfo": "cpp",
         "assert.h": "c",
         "user_programs.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "context.h": "c"
     }
 }

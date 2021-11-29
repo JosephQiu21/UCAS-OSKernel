@@ -51,7 +51,7 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     new_pcb -> pgdir = allocPage();
     share_pgtable(new_pcb -> pgdir, pa2kva(PGDIR_PA));
 
-    new_pcb -> kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, KERNEL_MODE) + PAGE_SIZE;
+    new_pcb -> kernel_sp = allocPage();
     new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, USER_MODE) + PAGE_SIZE - 0x100;
 
     // Copy new arguments to new user stack

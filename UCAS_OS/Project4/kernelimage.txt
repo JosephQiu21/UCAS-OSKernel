@@ -10,10 +10,10 @@ Disassembly of section .text:
     50301008:	6299                	lui	t0,0x6
     5030100a:	1002b073          	csrc	sstatus,t0
     5030100e:	0003e197          	auipc	gp,0x3e
-    50301012:	f9a18193          	addi	gp,gp,-102 # 5033efa8 <__global_pointer$>
-    50301016:	7f418693          	addi	a3,gp,2036 # 5033f79c <_edata>
+    50301012:	fb218193          	addi	gp,gp,-78 # 5033efc0 <__global_pointer$>
+    50301016:	7f418693          	addi	a3,gp,2036 # 5033f7b4 <_edata>
     5030101a:	0003e717          	auipc	a4,0x3e
-    5030101e:	78e70713          	addi	a4,a4,1934 # 5033f7a8 <__BSS_END__>
+    5030101e:	7a670713          	addi	a4,a4,1958 # 5033f7c0 <__BSS_END__>
     50301022:	00e6d763          	bge	a3,a4,50301030 <clear_bss_done>
 
 0000000050301026 <clear_bss>:
@@ -360,15 +360,15 @@ Disassembly of section .text:
     503013bc:	e422                	sd	s0,8(sp)
     503013be:	0800                	addi	s0,sp,16
     503013c0:	0003e797          	auipc	a5,0x3e
-    503013c4:	3d078793          	addi	a5,a5,976 # 5033f790 <__SDATA_BEGIN__>
+    503013c4:	3e878793          	addi	a5,a5,1000 # 5033f7a8 <__SDATA_BEGIN__>
     503013c8:	6398                	ld	a4,0(a5)
     503013ca:	6785                	lui	a5,0x1
     503013cc:	973e                	add	a4,a4,a5
     503013ce:	0003e797          	auipc	a5,0x3e
-    503013d2:	3c278793          	addi	a5,a5,962 # 5033f790 <__SDATA_BEGIN__>
+    503013d2:	3da78793          	addi	a5,a5,986 # 5033f7a8 <__SDATA_BEGIN__>
     503013d6:	e398                	sd	a4,0(a5)
     503013d8:	0003e797          	auipc	a5,0x3e
-    503013dc:	3b878793          	addi	a5,a5,952 # 5033f790 <__SDATA_BEGIN__>
+    503013dc:	3d078793          	addi	a5,a5,976 # 5033f7a8 <__SDATA_BEGIN__>
     503013e0:	639c                	ld	a5,0(a5)
     503013e2:	853e                	mv	a0,a5
     503013e4:	6422                	ld	s0,8(sp)
@@ -551,7 +551,7 @@ Disassembly of section .text:
     503015ca:	ef8d                	bnez	a5,50301604 <boot_kernel+0x4e>
     503015cc:	f37ff0ef          	jal	ra,50301502 <setup_vm>
     503015d0:	0003e797          	auipc	a5,0x3e
-    503015d4:	1c878793          	addi	a5,a5,456 # 5033f798 <_length_main>
+    503015d4:	1e078793          	addi	a5,a5,480 # 5033f7b0 <_length_main>
     503015d8:	439c                	lw	a5,0(a5)
     503015da:	00000697          	auipc	a3,0x0
     503015de:	fc268693          	addi	a3,a3,-62 # 5030159c <directmap>
@@ -563,12 +563,12 @@ Disassembly of section .text:
     503015f4:	87aa                	mv	a5,a0
     503015f6:	873e                	mv	a4,a5
     503015f8:	0003e797          	auipc	a5,0x3e
-    503015fc:	1a878793          	addi	a5,a5,424 # 5033f7a0 <start_kernel>
+    503015fc:	1c078793          	addi	a5,a5,448 # 5033f7b8 <start_kernel>
     50301600:	e398                	sd	a4,0(a5)
     50301602:	a019                	j	50301608 <boot_kernel+0x52>
     50301604:	eddff0ef          	jal	ra,503014e0 <enable_vm>
     50301608:	0003e797          	auipc	a5,0x3e
-    5030160c:	19878793          	addi	a5,a5,408 # 5033f7a0 <start_kernel>
+    5030160c:	1b078793          	addi	a5,a5,432 # 5033f7b8 <start_kernel>
     50301610:	639c                	ld	a5,0(a5)
     50301612:	fe043583          	ld	a1,-32(s0)
     50301616:	fe843503          	ld	a0,-24(s0)
