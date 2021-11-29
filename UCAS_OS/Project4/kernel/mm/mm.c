@@ -47,32 +47,51 @@ void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir)
    */
 uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir, mode_t mode)
 {
-    uint64_t vpn0 = (va >> NORMAL_PAGE_SHIFT) & ~(~0 << PPN_BITS);
-    uint64_t vpn1 = (va >> NORMAL_PAGE_SHIFT + PPN_BITS) & ~(~0 << PPN_BITS);
-    uint64_t vpn2 = (va >> NORMAL_PAGE_SHIFT + 2 * PPN_BITS) & ~(~0 << PPN_BITS);
-    PTE *first_level_pgdir = (PTE *)pgdir + vpn2;
-    if ((*first_level_pgdir & _PAGE_PRESENT) == 0)
-    {
-        ptr_t newpage = allocPage();
-        set_pfn(first_level_pgdir, kva2pa(newpage) >> NORMAL_PAGE_SHIFT);
-        set_attribute(first_level_pgdir, (mode ? _PAGE_USER : 0) | _PAGE_PRESENT);
+    PTE * pdgir_2 = pgdir;
+    va &= VA_MASK;
+    uint64_t vpn2 =
+        va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^
+                    (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = ((vpn1 << PPN_BITS) | (vpn2 << (PPN_BITS + PPN_BITS))) ^
+                    (va >> (NORMAL_PAGE_SHIFT));
+    if ((pdgir_2)[vpn2] % 2 == 0) {
+        // alloc a new second-level page directory
+        set_pfn(&(pdgir_2)[vpn2], kva2pa(allocPage()) >> NORMAL_PAGE_SHIFT);
+        set_attribute(&(pdgir_2)[vpn2], _PAGE_PRESENT | _PAGE_USER);
+        clear_pgdir((get_va((pdgir_2)[vpn2])));
     }
-    PTE *second_level_pgdir = (PTE *)pa2kva(get_pa(*first_level_pgdir)) + vpn1;
-    if ((*second_level_pgdir & _PAGE_PRESENT) == 0)
-    {
-        ptr_t newpage = allocPage();
-        set_pfn(second_level_pgdir, kva2pa(newpage) >> NORMAL_PAGE_SHIFT);
-        set_attribute(second_level_pgdir, (mode ? _PAGE_USER : 0) | _PAGE_PRESENT);
+
+    PTE * pdgir_1 = get_va(((PTE *) pgdir)[vpn2]);
+
+    if ((pdgir_1)[vpn1] % 2 == 0) {
+        // alloc a new second-level page directory
+        set_pfn(&(pdgir_1)[vpn1], kva2pa(allocPage()) >> NORMAL_PAGE_SHIFT);
+        set_attribute(&(pdgir_1)[vpn1], _PAGE_PRESENT | _PAGE_USER);
+        clear_pgdir(get_va((pdgir_1)[vpn1]));
     }
-    PTE *last_level_pgdir = (PTE *)pa2kva(get_pa(*second_level_pgdir)) + vpn0;
-    if ((*last_level_pgdir & _PAGE_PRESENT) == 0)
+
+    uint64_t kva = allocPage();
+
+    PTE *pmd = get_va((pdgir_1)[vpn1]);
+    // set_pfn(&pmd[vpn0], kva2pa(kva >> NORMAL_PAGE_SHIFT));
+    // set_attribute(
+    //     &pmd[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE |
+    //                     _PAGE_EXEC | _PAGE_ACCESSED | _PAGE_DIRTY);
+    if (pmd[vpn0] % 2 == 0)
     {
-        ptr_t newpage = allocPage();
-        set_pfn(last_level_pgdir, kva2pa(newpage) >> NORMAL_PAGE_SHIFT);
-        set_attribute(last_level_pgdir, _PAGE_DIRTY | _PAGE_ACCESSED | (mode ? _PAGE_USER : 0) | _PAGE_EXEC | _PAGE_WRITE | _PAGE_READ | _PAGE_PRESENT);
-        return newpage;
+        uint64_t kva = allocPage();
+        set_pfn(&pmd[vpn0], kva2pa(kva) >> NORMAL_PAGE_SHIFT);
+        set_attribute(
+            &pmd[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE |
+                            _PAGE_EXEC | _PAGE_ACCESSED | _PAGE_DIRTY | _PAGE_USER);
+        return kva;
+    }else{
+        return pa2kva((pmd[vpn0] >> 10) << 12 );
     }
-    return 0;
+    
+
+    return kva;
     // uint64_t vpn2 = (va >> (NORMAL_PAGE_SHIFT + 2 * PPN_BITS)) & VPN_MASK;
     // uint64_t vpn1 = (va >> (NORMAL_PAGE_SHIFT + PPN_BITS)) & VPN_MASK;
     // uint64_t vpn0 = (va >> NORMAL_PAGE_SHIFT) & VPN_MASK;
