@@ -104,3 +104,4 @@ floppy:
 asm:
 	${OBJDUMP} -d main > kernel.txt
 	${OBJDUMP} -d kernelimage > kernelimage.txt
+	${OBJDUMP} -d ./test/test_shell.elf > test_shell.txt

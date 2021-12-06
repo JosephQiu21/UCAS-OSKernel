@@ -56,11 +56,12 @@ void check_timer()
     //disable_preempt();
     pcb_t *tmp;
     list_node_t *p = sleep_queue.next;
-    while(!is_list_empty(&sleep_queue) && (p != &sleep_queue)){
-        tmp = container_of(p, pcb_t, list);
-        p = p -> next;
-        if(get_ticks() >= tmp -> timeout_ticks)
+    while(p != &sleep_queue){
+        pcb_t *ptask = container_of(p, pcb_t, list);
+        tmp = p -> next;
+        if (get_ticks() >= tmp -> timeout_ticks)
             do_unblock(&(tmp -> list));  // Wake up
+        p = tmp;
     }
     //enable_preempt();
 }

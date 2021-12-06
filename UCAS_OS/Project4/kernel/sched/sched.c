@@ -19,6 +19,9 @@ pcb_t pid0_pcb = {
     .preempt_count = 0
 };
 
+LIST_HEAD(ready_queue);
+LIST_HEAD(sleep_queue);
+
 extern pid_t process_id = 1;
 
 /* current running task PCB */
@@ -51,11 +54,11 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     new_pcb -> pgdir = allocPage();
     share_pgtable(new_pcb -> pgdir, pa2kva(PGDIR_PA));
 
-    new_pcb -> kernel_sp = allocPage();
-    new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, USER_MODE) + PAGE_SIZE - 0x100;
+    new_pcb -> kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 0) + PAGE_SIZE;
+    new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 1) + PAGE_SIZE - 0xc0;
 
     // Copy new arguments to new user stack
-    uintptr_t new_argv_base = USER_STACK_ADDR - 0x100;
+    uintptr_t new_argv_base = USER_STACK_ADDR - 0xc0;
     uint64_t *new_argv = new_pcb -> user_sp;
     for (i = 0; i < argc; i++) {
         *(new_argv + i) = (uint64_t)(new_argv_base + 0x10 * (i + 1));
@@ -72,8 +75,8 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     new_pcb -> status = TASK_READY;
     new_pcb -> mode = mode;
 
-    new_pcb->cursor_x = 1;
-    new_pcb->cursor_y = 1;
+    new_pcb->cursor_x = 0;
+    new_pcb->cursor_y = 0;
 
     new_pcb -> num_lock = 0;
 
@@ -110,7 +113,7 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
 void do_scheduler(void)
 {
     // Check sleep queue to wake up
-    check_timer(); 
+    // check_timer(); 
     // Modify the current_running pointer.
     pcb_t *next_running = is_list_empty(&ready_queue) ? &pid0_pcb : 
                                                         container_of(dequeue(&ready_queue), pcb_t, list);
@@ -126,11 +129,10 @@ void do_scheduler(void)
     process_id = current_running -> pid;
     // restore the current_runnint's cursor_x and cursor_y
     vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
-    screen_cursor_x = current_running->cursor_x;
-    screen_cursor_y = current_running->cursor_y;
+    // screen_cursor_x = current_running->cursor_x;
+    // screen_cursor_y = current_running->cursor_y;
 
-    uintptr_t ppn = kva2pa(current_running -> pgdir) >> NORMAL_PAGE_SHIFT;
-    set_satp(SATP_MODE_SV39, current_running -> pid, ppn);
+    set_satp(SATP_MODE_SV39, current_running -> pid, kva2pa(current_running -> pgdir) >> NORMAL_PAGE_SHIFT);
     local_flush_tlb_all();
 
     switch_to(tmp, current_running);

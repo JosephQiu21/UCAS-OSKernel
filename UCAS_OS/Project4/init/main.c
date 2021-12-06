@@ -43,11 +43,6 @@
 extern void ret_from_exception();
 extern void __global_pointer$();
 
-LIST_HEAD(ready_queue);
-LIST_HEAD(sleep_queue);
-
-//list_head ready_queue;
-//list_head sleep_queue;
 
 int find_freepcb();
 
@@ -63,11 +58,11 @@ void init_pcb_stack(
     {
         pt_regs->regs[i] = 0;
     }
-    pt_regs->regs[1] = (reg_t)entry_point;
-    pt_regs->regs[2] = USER_STACK_ADDR - 0x100;
+    pt_regs->regs[1] = entry_point;
+    pt_regs->regs[2] = user_stack;
     pt_regs->regs[3] = (reg_t)__global_pointer$;
-    pt_regs->regs[10] = (reg_t)argc;
-    pt_regs->regs[11] = (reg_t)argv;
+    pt_regs->regs[10] = argc;
+    pt_regs->regs[11] = argv;
     pt_regs->sepc = entry_point;
     pt_regs->sstatus = SR_SUM;
     pt_regs->scause = 0;
@@ -75,19 +70,18 @@ void init_pcb_stack(
 
     // Update kernel_sp in pcb
     pcb -> kernel_sp = kernel_stack - sizeof(regs_context_t) - sizeof(switchto_context_t);
+    pcb -> user_sp = user_stack;
 
     // set switch-to context
     switchto_context_t *st_regs = (switchto_context_t *)pcb->kernel_sp;
 
     // Set ra & sp
-    st_regs->regs[0] = (reg_t)&ret_from_exception;
-    // st_regs->regs[1] = user_stack;
+    st_regs->regs[0] = &ret_from_exception;
+    st_regs->regs[1] = user_stack;
     for (i = 2; i < 14; i++)
     {
         st_regs->regs[i] = 0;
     }
-    pcb -> user_sp = USER_STACK_ADDR - 0x100;
-   // current_running = &pid0_pcb;
 }
 
 // pid_t do_spawn(task_info_t *task, void* arg, spawn_mode_t mode){
@@ -114,29 +108,35 @@ static void init_shell(){
     pcb[0].pid = 1;
     pcb[0].status = TASK_READY;
     pcb[0].type = USER_PROCESS;
+    pcb[0].mode = AUTO_CLEANUP_ON_EXIT;
 
     /* Page Directory */
     pcb[0].pgdir = allocPage();
+    clear_pgdir(pcb[0].pgdir);
     share_pgtable(pcb[0].pgdir, pa2kva(PGDIR_PA));
 
+    list_init(&ready_queue);
+
     /* Register context */
-    pcb[0].kernel_sp = allocPage() + PAGE_SIZE;
+    pcb[0].kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, 0) + PAGE_SIZE;
     // allocPage() + PAGE_SIZE;
     // alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, KERNEL_MODE);
-    pcb[0].user_sp = USER_STACK_ADDR - 0x100;
-    alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, USER_MODE);
+    pcb[0].user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, 1) + PAGE_SIZE;
+    // alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, 1);
     // USER_STACK_ADDR - 0x100;
     // alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, USER_MODE);
-
+    pcb[0].user_sp = USER_STACK_ADDR - 0x80;
     /* Enqueue */
     enqueue(&ready_queue, &pcb[0].list);
 
-    pcb[0].cursor_x = 1;
-    pcb[0].cursor_y = 1;
+    pcb[0].cursor_x = 0;
+    pcb[0].cursor_y = 0;
 
-    uintptr_t elf_entry = load_elf(_elf___test_test_shell_elf, _length___test_test_shell_elf, pcb[0].pgdir, elf_alloc_page_helper);
-    init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, elf_entry, &pcb[0], NULL, NULL);
+    ptr_t shell_entry = (ptr_t)load_elf(_elf___test_test_shell_elf,
+                                        _length___test_test_shell_elf, pcb[0].pgdir, elf_alloc_page_helper);
+    init_pcb_stack(pcb[0].kernel_sp, pcb[0].user_sp, shell_entry, &pcb[0], NULL, NULL);
 
+    
     current_running = &pid0_pcb;
 }
 
@@ -151,12 +151,11 @@ int find_freepcb() {
 
 void cancel_map(uintptr_t va)
 {
-    uintptr_t pgdir = 0xffffffc05e000000;
+    uintptr_t pgdir = pa2kva(PGDIR_PA);
     uintptr_t vpn2 = va >> (NORMAL_PAGE_SHIFT + 2 * PPN_BITS);
     uintptr_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
-    PTE *first_level_pgdir = (PTE *)pgdir + vpn2;
-    PTE *last_level_pgdir = (PTE *)pa2kva(get_pa(*first_level_pgdir)) + vpn1;
-    *first_level_pgdir = 0;
+    PTE *first_level_pgdir = (PTE *)(pgdir + vpn2);
+    PTE *last_level_pgdir = (PTE *)(pa2kva(get_pa(*first_level_pgdir)) + vpn1);
     *last_level_pgdir = 0;
 }
 
@@ -221,7 +220,8 @@ void cancel_map(uintptr_t va)
     // The beginning of everything >_< ~~~~~~~~~~~~~~
     int main()
     {
-        cancel_map(0x50000000);
+        //cancel_map(0x50000000);
+        //cancel_map(0x50200000);
         // init shell (-_-!)
         init_shell();
         printk("> [INIT] Shell initialization succeeded.\n\r");
@@ -244,14 +244,16 @@ void cancel_map(uintptr_t va)
         printk("> [INIT] SCREEN initialization succeeded.\n\r");
 
         // Setup timer interrupt and enable all interrupt
-        sbi_set_timer(get_ticks() + time_base / 1000);
-        enable_interrupt();
+        // sbi_set_timer(get_ticks() + time_base / 100);
+        // enable_interrupt();
+        do_scheduler();
 
         while (1)
         {
             // (QAQQQQQQQQQQQ)
             // If you do non-preemptive scheduling, you need to use it
             // to surrender control do_scheduler();
+
         };
         return 0;
     }

@@ -4,11 +4,11 @@
 ENTRY(setup_exception)
   /* save exception_handler_entry into STVEC
    * enable global exceptions */
+
   la t0, exception_handler_entry
   csrw CSR_STVEC, t0
-  li t0, SR_SIE
-  csrw sstatus, t0
-  li s0, SIE_SSIE | SIE_STIE | SIE_SEIE
-  csrw sie, s0
+  li t0, SIE_STIE
+  csrw CSR_SIE  , t0
+  csrsi CSR_SSTATUS, SR_SIE
   jr ra
 ENDPROC(setup_exception)

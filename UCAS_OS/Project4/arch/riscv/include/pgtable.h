@@ -110,7 +110,7 @@ static inline uintptr_t pa2kva(uintptr_t pa)
 // Get physical address from PTE
 static inline uint64_t get_pa(PTE entry)
 {
-    return (entry >> _PAGE_PFN_SHIFT) << NORMAL_PAGE_SHIFT;
+    return (uint64_t)(entry >> _PAGE_PFN_SHIFT) << NORMAL_PAGE_SHIFT;
 }
 
 // Look up page directory at `pgdir_va`, get physical address, then return KVA
@@ -127,8 +127,6 @@ static inline long get_pfn(PTE entry)
 
 static inline void set_pfn(PTE *entry, uint64_t pfn)
 {
-    // Clear
-    *entry &= PFN_MASK;
     // Set 
     *entry |= (pfn << _PAGE_PFN_SHIFT);
 }
@@ -136,12 +134,10 @@ static inline void set_pfn(PTE *entry, uint64_t pfn)
 /* Get/Set attribute(s) of the `entry` */
 static inline long get_attribute(PTE entry, uint64_t mask)
 {
-    return entry & PFN_MASK;
+    return entry & mask;
 }
 static inline void set_attribute(PTE *entry, uint64_t bits)
 {
-    // Clear
-    *entry &= ~PFN_MASK;
     // Set
     *entry |= bits;
 }
@@ -149,7 +145,9 @@ static inline void set_attribute(PTE *entry, uint64_t bits)
 // A page directory takes one page
 static inline void clear_pgdir(uintptr_t pgdir_addr)
 {
-    kmemset((void *)pgdir_addr, 0, NORMAL_PAGE_SIZE);
+    //kmemset((void *)pgdir_addr, 0, NORMAL_PAGE_SIZE);
+    uint8_t *pgdir = pgdir_addr;
+    kbzero(pgdir, NORMAL_PAGE_SIZE);
 }
 
 #endif  // PGTABLE_H

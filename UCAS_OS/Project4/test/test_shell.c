@@ -59,7 +59,7 @@ struct{
     {"kill", "Kill process n", "kill [pid]", &shell_kill, 1},
     {"clear", "Clear the screen", "clear [NO ARG]", &shell_clear, 0},
     {"ps", "Show Process Table", "ps [NO ARG]", &shell_ps, 0},
-    {"exit", "Exit current process", "exit [NO ARG], &shell_exit, 0"},
+    {"exit", "Exit current process", "exit [NO ARG]", &shell_exit, 0},
     {"ls", "List all executables", "ls [NO ARG]", &shell_ls, 0}
 };
 
@@ -111,6 +111,7 @@ pid_t shell_exec(char *proc, char *arg0, char *arg1, char* arg2){
     pid_t pid = sys_exec(proc, argc, argv, 1);
     if (pid > 0)
         printf("> Task execution succeed! PID: %d, MODE: %s\n", pid, "AUTO_CLEANUP_ON_EXIT");
+    sys_yield();
     return pid;
 }
 
