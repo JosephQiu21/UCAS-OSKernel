@@ -180,12 +180,13 @@ void send_thread(void *arg)
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2) {
+    // debug info
+    if (argc != 1) {
         display_usage();
         return -1;
     }
 
-    char id = argv[1][0];
+    char id = argv[0][0];
     if (id != 'a' && id != 'b' && id != 'c') {
         display_usage();
         return -1;

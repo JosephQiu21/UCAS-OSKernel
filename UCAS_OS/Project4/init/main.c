@@ -214,6 +214,7 @@ void cancel_map(uintptr_t va)
         syscall[SYSCALL_MBOX_RECV        ] = &do_mbox_recv;
         syscall[SYSCALL_EXEC             ] = &do_exec;
         syscall[SYSCALL_LS               ] = &do_ls;
+        syscall[SYSCALL_MTHREAD_CREATE   ] = &do_mthread_create;
     }
 
     // jump from bootloader.

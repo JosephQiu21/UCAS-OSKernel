@@ -30,7 +30,7 @@ pcb_t * volatile current_running;
 
 int match_elf(char *file_name)
 {
-    for (int i = 1; i < 4; i++)
+    for (int i = 1; i < 5; i++)
         if (kstrcmp(file_name, elf_files[i].file_name) == 0)
             return i;
     return -1;
@@ -50,6 +50,7 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     }
 
     pcb_t *new_pcb = &pcb[i];
+    new_pcb -> pid = i + 1;
 
     new_pcb -> pgdir = allocPage();
     clear_pgdir(new_pcb -> pgdir);
@@ -65,14 +66,13 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     uint64_t *new_argv = new_pcb -> user_sp;
     for (i = 0; i < argc; i++) {
         *(new_argv + i) = (uint64_t)(new_argv_base + 0x10 * (i + 1));
-        memcpy((char *)(new_pcb -> user_sp + 0x10 * (i + 1)), argv[i], 0x10);
+        memcpy((uint8_t)(new_pcb -> user_sp + 0x10 * (i + 1)), argv[i], 0x10);
     }
 
     enqueue(&ready_queue, &new_pcb -> list);
 
     list_init(&new_pcb -> wait_list);
 
-    new_pcb -> pid = i + 1;
 
     new_pcb -> type = USER_PROCESS;
     new_pcb -> status = TASK_READY;
@@ -90,6 +90,42 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     uintptr_t elf_entry = load_elf(elf_binary, elf_length, new_pcb -> pgdir, elf_alloc_page_helper);
 
     init_pcb_stack(new_pcb -> kernel_sp, new_pcb -> user_sp, elf_entry, new_pcb, argc, new_argv_base);
+
+    return new_pcb -> pid;
+}
+
+pid_t do_mthread_create(void (*start_routine)(void *), void *arg){
+    int i = find_freepcb();
+    if (i == -1) {
+        prints("> [ERROR] Unable to execute another task.");
+        return -1;
+    }
+    
+    pcb_t *new_pcb = &pcb[i];
+
+    new_pcb -> pgdir = current_running -> pgdir;
+
+    new_pcb -> kernel_sp = allocPage() + PAGE_SIZE;
+    // alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 0) + PAGE_SIZE;
+    new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - 2 * PAGE_SIZE, new_pcb -> pgdir, 1) + PAGE_SIZE;
+    new_pcb -> user_sp = USER_STACK_ADDR - PAGE_SIZE;
+
+    enqueue(&ready_queue, &new_pcb -> list);
+
+    list_init(&new_pcb -> wait_list);
+
+    new_pcb -> pid = i + 1;
+
+    new_pcb -> type = USER_THREAD;
+    new_pcb -> status = TASK_READY;
+    new_pcb -> mode = AUTO_CLEANUP_ON_EXIT;
+
+    new_pcb -> cursor_x = 0;
+    new_pcb -> cursor_y = 0;
+
+    new_pcb -> num_lock = 0;
+
+    init_pcb_stack(new_pcb -> kernel_sp, new_pcb -> user_sp, start_routine, new_pcb, 1, arg);
 
     return new_pcb -> pid;
 }

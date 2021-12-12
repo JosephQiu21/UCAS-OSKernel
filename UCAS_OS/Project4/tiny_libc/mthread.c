@@ -67,3 +67,15 @@ void mthread_semaphore_destroy(void* handle)
     int *id = (int *)handle;
     sys_semaphore_op(*id, SEMAPHORE_DESTROY);
 }
+
+int mthread_create(mthread_t *thread,
+                   void (*start_routine)(void*),
+                   void *arg)
+{
+    *thread = sys_mthread_create(start_routine, arg);
+}
+
+int mthread_join(mthread_t thread)
+{
+    return 0;
+}

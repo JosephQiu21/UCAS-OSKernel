@@ -144,7 +144,7 @@ char read_uart(){
 
 void parse(char *cmd){
     int cmd_id;
-    char arg[10][10] = {0};
+    char arg[10][15] = {0};
     char *parse = cmd;
     int i = 0, j = 0, k = 0;
     // k: scan parse

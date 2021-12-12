@@ -153,5 +153,6 @@ extern pid_t do_getpid();
 extern pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode);
 extern void do_show_exec();
 extern void do_ls();
- 
+extern pid_t do_mthread_create(void (*start_routine)(void *), void *arg);
+
 #endif

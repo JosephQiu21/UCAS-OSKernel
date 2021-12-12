@@ -75,5 +75,6 @@
 
 #define SYSCALL_EXEC 48
 #define SYSCALL_LS 49
+#define SYSCALL_MTHREAD_CREATE 50
 
 #endif

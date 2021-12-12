@@ -150,3 +150,8 @@ void sys_ls()
 {
     invoke_syscall(SYSCALL_LS, IGNORE, IGNORE, IGNORE, IGNORE);
 }
+
+pid_t sys_mthread_create(void (*start_routine)(void *), void *arg)
+{
+    return invoke_syscall(SYSCALL_MTHREAD_CREATE, start_routine, arg, IGNORE, IGNORE);
+}
