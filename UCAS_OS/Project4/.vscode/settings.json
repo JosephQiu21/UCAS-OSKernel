@@ -18,6 +18,7 @@
         "user_programs.h": "c",
         "stdio.h": "c",
         "context.h": "c",
-        "pgtable.h": "c"
+        "pgtable.h": "c",
+        "mthread.h": "c"
     }
 }

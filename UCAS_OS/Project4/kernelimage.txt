@@ -9,11 +9,11 @@ Disassembly of section .text:
     50301004:	14401073          	csrw	sip,zero
     50301008:	6299                	lui	t0,0x6
     5030100a:	1002b073          	csrc	sstatus,t0
-    5030100e:	0003e197          	auipc	gp,0x3e
-    50301012:	24218193          	addi	gp,gp,578 # 5033f250 <__global_pointer$>
-    50301016:	7f418693          	addi	a3,gp,2036 # 5033fa44 <_edata>
-    5030101a:	0003f717          	auipc	a4,0x3f
-    5030101e:	a3670713          	addi	a4,a4,-1482 # 5033fa50 <__BSS_END__>
+    5030100e:	00048197          	auipc	gp,0x48
+    50301012:	0aa18193          	addi	gp,gp,170 # 503490b8 <__global_pointer$>
+    50301016:	7f418693          	addi	a3,gp,2036 # 503498ac <_edata>
+    5030101a:	00049717          	auipc	a4,0x49
+    5030101e:	89e70713          	addi	a4,a4,-1890 # 503498b8 <__BSS_END__>
     50301022:	00e6d763          	bge	a3,a4,50301030 <clear_bss_done>
 
 0000000050301026 <clear_bss>:
@@ -349,16 +349,16 @@ Disassembly of section .text:
     5030139e:	1141                	addi	sp,sp,-16
     503013a0:	e422                	sd	s0,8(sp)
     503013a2:	0800                	addi	s0,sp,16
-    503013a4:	0003e797          	auipc	a5,0x3e
-    503013a8:	69478793          	addi	a5,a5,1684 # 5033fa38 <__SDATA_BEGIN__>
+    503013a4:	00048797          	auipc	a5,0x48
+    503013a8:	4fc78793          	addi	a5,a5,1276 # 503498a0 <__SDATA_BEGIN__>
     503013ac:	6398                	ld	a4,0(a5)
     503013ae:	6785                	lui	a5,0x1
     503013b0:	973e                	add	a4,a4,a5
-    503013b2:	0003e797          	auipc	a5,0x3e
-    503013b6:	68678793          	addi	a5,a5,1670 # 5033fa38 <__SDATA_BEGIN__>
+    503013b2:	00048797          	auipc	a5,0x48
+    503013b6:	4ee78793          	addi	a5,a5,1262 # 503498a0 <__SDATA_BEGIN__>
     503013ba:	e398                	sd	a4,0(a5)
-    503013bc:	0003e797          	auipc	a5,0x3e
-    503013c0:	67c78793          	addi	a5,a5,1660 # 5033fa38 <__SDATA_BEGIN__>
+    503013bc:	00048797          	auipc	a5,0x48
+    503013c0:	4e478793          	addi	a5,a5,1252 # 503498a0 <__SDATA_BEGIN__>
     503013c4:	639c                	ld	a5,0(a5)
     503013c6:	853e                	mv	a0,a5
     503013c8:	6422                	ld	s0,8(sp)
@@ -540,8 +540,8 @@ Disassembly of section .text:
     503015aa:	fe843783          	ld	a5,-24(s0)
     503015ae:	ef8d                	bnez	a5,503015e8 <boot_kernel+0x4e>
     503015b0:	f37ff0ef          	jal	ra,503014e6 <setup_vm>
-    503015b4:	0003e797          	auipc	a5,0x3e
-    503015b8:	48c78793          	addi	a5,a5,1164 # 5033fa40 <_length_main>
+    503015b4:	00048797          	auipc	a5,0x48
+    503015b8:	2f478793          	addi	a5,a5,756 # 503498a8 <_length_main>
     503015bc:	439c                	lw	a5,0(a5)
     503015be:	00000697          	auipc	a3,0x0
     503015c2:	fc268693          	addi	a3,a3,-62 # 50301580 <directmap>
@@ -552,13 +552,13 @@ Disassembly of section .text:
     503015d4:	bf1ff0ef          	jal	ra,503011c4 <load_elf>
     503015d8:	87aa                	mv	a5,a0
     503015da:	873e                	mv	a4,a5
-    503015dc:	0003e797          	auipc	a5,0x3e
-    503015e0:	46c78793          	addi	a5,a5,1132 # 5033fa48 <start_kernel>
+    503015dc:	00048797          	auipc	a5,0x48
+    503015e0:	2d478793          	addi	a5,a5,724 # 503498b0 <start_kernel>
     503015e4:	e398                	sd	a4,0(a5)
     503015e6:	a019                	j	503015ec <boot_kernel+0x52>
     503015e8:	eddff0ef          	jal	ra,503014c4 <enable_vm>
-    503015ec:	0003e797          	auipc	a5,0x3e
-    503015f0:	45c78793          	addi	a5,a5,1116 # 5033fa48 <start_kernel>
+    503015ec:	00048797          	auipc	a5,0x48
+    503015f0:	2c478793          	addi	a5,a5,708 # 503498b0 <start_kernel>
     503015f4:	639c                	ld	a5,0(a5)
     503015f6:	fe043583          	ld	a1,-32(s0)
     503015fa:	fe843503          	ld	a0,-24(s0)

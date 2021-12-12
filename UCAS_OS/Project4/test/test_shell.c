@@ -100,7 +100,7 @@ void shell_man(char *cmd){
 }
 
 pid_t shell_exec(char *proc, char *arg0, char *arg1, char* arg2){
-    int argc = 1;
+    int argc = 0;
     if (strlen(arg0) != 0)
         argc ++;
     if (strlen(arg1) != 0)
@@ -111,7 +111,6 @@ pid_t shell_exec(char *proc, char *arg0, char *arg1, char* arg2){
     pid_t pid = sys_exec(proc, argc, argv, 1);
     if (pid > 0)
         printf("> Task execution succeed! PID: %d, MODE: %s\n", pid, "AUTO_CLEANUP_ON_EXIT");
-    sys_yield();
     return pid;
 }
 
@@ -167,10 +166,10 @@ void parse(char *cmd){
     }
 
     if (cmd_id == -1) {
-        printf("> [ERROR] Command not found! %s\n", arg[0]);
+        printf("> [ERROR] Command `%s` not found! \n", arg[0]);
     }
 
-    else if (cmd_table[cmd_id].num_args != i) {
+    else if (cmd_id != 2 && cmd_table[cmd_id].num_args != i) {
         printf("> [ERROR] Wrong number of arguments! Required: %d Input: %d\n", cmd_table[cmd_id].num_args, i);
         printf("> Usage: %s\n", cmd_table[cmd_id].usage);
     }
@@ -188,40 +187,58 @@ void main()
     sys_move_cursor(1, SHELL_BEGIN);
     printf("------------------- JOSEPH's SHELL -------------------\n");
     printf("> root@UCAS_OS: ");
+    sys_reflush();
 
     char ch;
-    int len;
-    char cmd[10] = {0};
+    int len = 0;
+    char cmd[50];
     while (1)
     {
-        while (1){
-            // call syscall to read UART port
-            ch = read_uart();
+        ch = read_uart();
 
-            // Get `Enter`: parse command, flush cmd buffer, break
-            if (ch == '\r'){
-                printf("\n");
-                cmd[len] = '\0';
-                parse(cmd);
-                len = 0;
-                break;
-            }
-
-            // Get `Backspace`: change last character to 0
-            else if (ch == 8 || ch == 127){
-                if (len > 0) {
-                    cmd[len--] = 0;
-                    sys_serial_write(ch);
-                }
-            }
-
-            else {
-                cmd[len++] = ch;
-                sys_serial_write(ch);
-            }
+        if (ch == '\r') {
+            printf("\n");
+            cmd[len] = '\0';
+            parse(cmd);
+            len = 0;
+            printf("> root@UCAS_OS: ");
+        } else if (ch == 8 || ch == 127) {
+            cmd[len--] = 0;
+            sys_serial_write(ch);
+        } else {
+            cmd[len++] = ch;
+            sys_serial_write(ch);
         }
-        printf("> root@UCAS_OS: ");
         sys_reflush();
+
+        // while (1){
+        //     // call syscall to read UART port
+        //     ch = read_uart();
+
+        //     // Get `Enter`: parse command, flush cmd buffer, break
+        //     if (ch == '\r'){
+        //         printf("\n");
+        //         cmd[len] = '\0';
+        //         parse(cmd);
+        //         len = 0;
+        //         break;
+        //     }
+
+        //     // Get `Backspace`: change last character to 0
+        //     else if (ch == 8 || ch == 127){
+        //         if (len > 0) {
+        //             cmd[len--] = 0;
+        //             sys_serial_write(ch);
+        //         }
+        //     }
+
+        //     else {
+        //         cmd[len++] = ch;
+        //         sys_serial_write(ch);
+        //     }
+        // }
+        // printf("> root@UCAS_OS: ");
+        // sys_reflush();
     }
 
 }

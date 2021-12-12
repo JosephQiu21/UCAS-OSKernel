@@ -118,7 +118,7 @@ static void init_shell(){
     list_init(&ready_queue);
 
     /* Register context */
-    pcb[0].kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, 0) + PAGE_SIZE;
+    pcb[0].kernel_sp = allocPage() + PAGE_SIZE;
     // allocPage() + PAGE_SIZE;
     // alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, KERNEL_MODE);
     pcb[0].user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, pcb[0].pgdir, 1) + PAGE_SIZE;
@@ -244,9 +244,9 @@ void cancel_map(uintptr_t va)
         printk("> [INIT] SCREEN initialization succeeded.\n\r");
 
         // Setup timer interrupt and enable all interrupt
-        // sbi_set_timer(get_ticks() + time_base / 100);
-        // enable_interrupt();
-        do_scheduler();
+        sbi_set_timer(get_ticks() + time_base / 200);
+        enable_interrupt();
+        // do_scheduler();
 
         while (1)
         {

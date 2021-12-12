@@ -30,7 +30,7 @@ pcb_t * volatile current_running;
 
 int match_elf(char *file_name)
 {
-    for (int i = 1; i < 3; i++)
+    for (int i = 1; i < 4; i++)
         if (kstrcmp(file_name, elf_files[i].file_name) == 0)
             return i;
     return -1;
@@ -52,10 +52,13 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     pcb_t *new_pcb = &pcb[i];
 
     new_pcb -> pgdir = allocPage();
+    clear_pgdir(new_pcb -> pgdir);
     share_pgtable(new_pcb -> pgdir, pa2kva(PGDIR_PA));
 
-    new_pcb -> kernel_sp = alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 0) + PAGE_SIZE;
-    new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 1) + PAGE_SIZE - 0xc0;
+    new_pcb -> kernel_sp = allocPage() + PAGE_SIZE;
+    // alloc_page_helper(KERNEL_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 0) + PAGE_SIZE;
+    new_pcb -> user_sp = alloc_page_helper(USER_STACK_ADDR - PAGE_SIZE, new_pcb -> pgdir, 1) + PAGE_SIZE;
+    new_pcb -> user_sp = USER_STACK_ADDR - 0xc0;
 
     // Copy new arguments to new user stack
     uintptr_t new_argv_base = USER_STACK_ADDR - 0xc0;
@@ -69,14 +72,14 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
 
     list_init(&new_pcb -> wait_list);
 
-    new_pcb -> pid = process_id++;
+    new_pcb -> pid = i + 1;
 
     new_pcb -> type = USER_PROCESS;
     new_pcb -> status = TASK_READY;
     new_pcb -> mode = mode;
 
-    new_pcb->cursor_x = 0;
-    new_pcb->cursor_y = 0;
+    new_pcb -> cursor_x = 0;
+    new_pcb -> cursor_y = 0;
 
     new_pcb -> num_lock = 0;
 
@@ -88,23 +91,6 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
 
     init_pcb_stack(new_pcb -> kernel_sp, new_pcb -> user_sp, elf_entry, new_pcb, argc, new_argv_base);
 
-    // Allocate one page of kernel stack 
-    page_t *kernel_stack = (page_t *)kmalloc(sizeof(page_t));
-    kernel_stack -> kva = new_pcb -> kernel_sp - PAGE_SIZE;
-    kernel_stack -> pa = kva2pa(kernel_stack -> kva);
-    list_init(&kernel_stack -> list);
-
-    // Allocate one page of user stack
-    page_t *user_stack = (page_t *)kmalloc(sizeof(page_t));
-    user_stack -> kva = new_pcb -> kernel_sp - PAGE_SIZE;
-    user_stack -> pa = kva2pa(user_stack -> kva);
-    list_init(&user_stack -> list);
-
-    // Add them into page list of pcb
-    list_init(&new_pcb -> page_list);
-    enqueue(&new_pcb -> page_list, &kernel_stack -> list);
-    enqueue(&new_pcb -> page_list, &user_stack -> list);
-
     return new_pcb -> pid;
 }
 
@@ -115,9 +101,15 @@ void do_scheduler(void)
     // Check sleep queue to wake up
     // check_timer(); 
     // Modify the current_running pointer.
-    pcb_t *next_running = is_list_empty(&ready_queue) ? &pid0_pcb : 
+    
+    pcb_t *next_running = is_list_empty(&ready_queue) ? &pcb[0] : 
                                                         container_of(dequeue(&ready_queue), pcb_t, list);
     pcb_t *tmp = current_running;
+
+    // debug
+    if (current_running == &pcb[1] && next_running == &pcb[0]) {
+        int debug = 1;
+    }
 
     // If not kernel process, add current_running to ready_queue
     if(current_running -> status == TASK_RUNNING && current_running -> pid != 0){ 
@@ -129,8 +121,8 @@ void do_scheduler(void)
     process_id = current_running -> pid;
     // restore the current_runnint's cursor_x and cursor_y
     vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
-    // screen_cursor_x = current_running->cursor_x;
-    // screen_cursor_y = current_running->cursor_y;
+    screen_cursor_x = current_running->cursor_x;
+    screen_cursor_y = current_running->cursor_y;
 
     set_satp(SATP_MODE_SV39, current_running -> pid, kva2pa(current_running -> pgdir) >> NORMAL_PAGE_SHIFT);
     local_flush_tlb_all();

@@ -17,7 +17,7 @@ void reset_irq_timer()
     screen_reflush();
     check_timer();
     // note: use sbi_set_timer
-    sbi_set_timer(get_ticks() + get_time_base() / 100);
+    sbi_set_timer(get_ticks() + time_base / 200);
     // remember to reschedule
     do_scheduler();
 }
@@ -56,8 +56,23 @@ void init_exception()
     for (i = 0; i < EXCC_COUNT; i++) exc_table[i] = &handle_other;
     irq_table[IRQC_S_SOFT ] = &sbi_clear_ipi;
     irq_table[IRQC_S_TIMER] = &handle_int;
+    exc_table[EXC_INST_PAGE_FAULT] = &handle_inst_page_fault;
+    exc_table[EXC_LOAD_PAGE_FAULT] = &handle_load_page_fault;
+    exc_table[EXC_STORE_PAGE_FAULT] = &handle_store_page_fault;
     exc_table[EXCC_SYSCALL] = &handle_syscall;
     setup_exception();
+}
+
+void handle_inst_page_fault(regs_context_t *regs, uint64_t stval, uint64_t cause){
+    alloc_page_helper(stval, current_running -> pgdir, 1);
+}
+
+void handle_load_page_fault(regs_context_t *regs, uint64_t stval, uint64_t cause){
+    alloc_page_helper(stval, current_running -> pgdir, 1);
+}
+
+void handle_store_page_fault(regs_context_t *regs, uint64_t stval, uint64_t cause){
+    alloc_page_helper(stval, current_running -> pgdir, 1);
 }
 
 void handle_other(regs_context_t *regs, uint64_t stval, uint64_t cause)

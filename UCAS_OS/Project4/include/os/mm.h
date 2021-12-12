@@ -35,12 +35,6 @@ typedef enum {
     USER_MODE
 } mode_t;
 
-typedef struct page
-{
-    uintptr_t pa;
-    uintptr_t kva;
-    list_node_t list;
-} page_t;
 
 #define MEM_SIZE 32
 #define PAGE_SIZE 4096 // 4K

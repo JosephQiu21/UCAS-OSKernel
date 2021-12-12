@@ -35,7 +35,7 @@ SRC_LIBC	= ./tiny_libc/printf.c ./tiny_libc/string.c ./tiny_libc/mthread.c ./tin
 SRC_LIBC_ASM	= $(filter %.S %.s,$(SRC_LIBC))
 SRC_LIBC_C	= $(filter %.c,$(SRC_LIBC))
 
-SRC_USER	= ./test/test_shell.elf ./test/rw.elf ./test/fly.elf #./test/consensus.elf ./test/lock.elf ./test/mailbox.elf
+SRC_USER	= ./test/test_shell.elf ./test/rw.elf ./test/fly.elf ./test/lock.elf #./test/consensus.elf  ./test/mailbox.elf
 
 SRC_SYNC    = ./kernel/sync/sync.c
 SRC_MAIN	= ${SRC_ARCH} ${SRC_INIT} ${SRC_INT} ${SRC_DRIVER} ${SRC_SCHED} ${SRC_MM} ${SRC_SYSCALL} ${SRC_LIBS} ${SRC_SYNC}
@@ -105,3 +105,4 @@ asm:
 	${OBJDUMP} -d main > kernel.txt
 	${OBJDUMP} -d kernelimage > kernelimage.txt
 	${OBJDUMP} -d ./test/test_shell.elf > test_shell.txt
+	${OBJDUMP} -d ./test/fly.elf > fly.txt
