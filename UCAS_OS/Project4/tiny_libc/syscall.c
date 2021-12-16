@@ -155,6 +155,10 @@ void sys_ls()
 pid_t sys_mthread_create(void (*start_routine)(void *), void *arg)
 {
     return invoke_syscall(SYSCALL_MTHREAD_CREATE, start_routine, arg, IGNORE, IGNORE);
+<<<<<<< HEAD
 }
 
 
+=======
+}
+>>>>>>> 365456c4eed96dac8dd39d30ef3a22b73355299e
