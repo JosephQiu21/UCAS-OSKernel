@@ -35,6 +35,7 @@
 #include <os/list.h>
 #include <os/mm.h>
 #include <os/lock.h>
+#include <os/string.h>
 
 #define NUM_MAX_TASK 16
 
@@ -122,6 +123,9 @@ typedef struct task_info
 /* ready queue to run */
 extern list_head ready_queue;
 extern list_head sleep_queue;
+
+extern list_head net_recv_queue;
+extern list_head net_send_queue;
 
 /* current running task PCB */
 extern pcb_t * volatile current_running;

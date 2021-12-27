@@ -35,6 +35,11 @@
 	#define FALSE 	0
 #endif
 
+#ifndef true
+	#define true 	1
+	#define false 	0
+#endif
+
 typedef unsigned __attribute__((__mode__(QI))) int8_t;
 typedef unsigned __attribute__((__mode__(QI))) uint8_t;
 typedef int      __attribute__((__mode__(HI))) int16_t;
@@ -44,12 +49,23 @@ typedef unsigned __attribute__((__mode__(SI))) uint32_t;
 typedef int      __attribute__((__mode__(DI))) int64_t;
 typedef unsigned __attribute__((__mode__(DI))) uint64_t;
 
+typedef uint8_t bool;
 typedef int32_t pid_t;
 typedef uint64_t reg_t;
 typedef uint64_t ptr_t;
 typedef uint64_t uintptr_t;
 typedef int64_t intptr_t;
 typedef uint64_t size_t;
+typedef uint64_t ptrdiff_t;
+ 
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef uint8_t  s8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
 /* Minimum of signed integral types.  */
 # define INT8_MIN               (-128)

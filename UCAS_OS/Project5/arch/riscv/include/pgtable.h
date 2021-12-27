@@ -3,6 +3,7 @@
 
 #include <type.h>
 #include <sbi.h>
+#include <io.h>
 
 #define SATP_MODE_SV39 8
 #define SATP_MODE_SV48 9
@@ -33,6 +34,11 @@ static inline void local_flush_tlb_page(unsigned long addr)
 static inline void local_flush_icache_all(void)
 {
     asm volatile ("fence.i" ::: "memory");
+}
+
+static inline void local_flush_dcache_all(void)
+{
+    dmb();
 }
 
 static inline void flush_icache_all(void)

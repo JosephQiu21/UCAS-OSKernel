@@ -2,20 +2,23 @@
 #include <os/time.h>
 #include <os/sched.h>
 #include <os/string.h>
-#include <stdio.h>
+#include <os/stdio.h>
 #include <assert.h>
 #include <sbi.h>
 #include <screen.h>
+#include <csr.h>
+#include <pgtable.h>
 
 handler_t irq_table[IRQC_COUNT];
 handler_t exc_table[EXCC_COUNT];
+uintptr_t riscv_dtb;
 
 void reset_irq_timer()
 {
     screen_reflush();
     check_timer();
     // note: use sbi_set_timer
-    sbi_set_timer(get_ticks() + get_time_base() / 500);
+    sbi_set_timer(get_ticks() + time_base / 200);
     // remember to reschedule
     do_scheduler();
 }
@@ -23,9 +26,22 @@ void reset_irq_timer()
 void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t cause)
 {
     // call corresponding handler by the value of `cause`
-    handler_t *table = (cause >> 63)? irq_table : exc_table;
-    uint64_t exec_code = cause & ~(1 << 63);
-    table[exec_code](regs, stval, cause);
+    // handler_t *table = (cause >> 63)? irq_table : exc_table;
+    // uint64_t exec_code = cause & ~(1 << 63);
+    // table[exec_code](regs, stval, cause);
+
+    if (cause >> 63) {
+        irq_table[cause & ~SCAUSE_IRQ_FLAG](regs, stval, cause);
+    } else {
+        exc_table[cause & ~SCAUSE_IRQ_FLAG](regs, stval, cause);
+    }
+    // uint64_t interrupt = cause & SCAUSE_IRQ_FLAG;
+    // cause &= ~SCAUSE_IRQ_FLAG;
+    // if (interrupt) {
+    //     irq_table[cause](regs, stval, cause);
+    // } else {
+    //     exc_table[cause](regs, stval, cause);
+    // }
 }
 
 void handle_int(regs_context_t *regs, uint64_t interrupt, uint64_t cause)
@@ -39,9 +55,51 @@ void init_exception()
     int i;
     for (i = 0; i < IRQC_COUNT; i++) irq_table[i] = &handle_other;
     for (i = 0; i < EXCC_COUNT; i++) exc_table[i] = &handle_other;
+    irq_table[IRQC_S_SOFT ] = &sbi_clear_ipi;
     irq_table[IRQC_S_TIMER] = &handle_int;
+    exc_table[EXC_INST_PAGE_FAULT] = &handle_inst_page_fault;
+    exc_table[EXC_LOAD_PAGE_FAULT] = &handle_load_page_fault;
+    exc_table[EXC_STORE_PAGE_FAULT] = &handle_store_page_fault;
     exc_table[EXCC_SYSCALL] = &handle_syscall;
     setup_exception();
+}
+
+void handle_inst_page_fault(regs_context_t *regs, uint64_t stval, uint64_t cause){
+    PTE* pte = find_pte(stval, current_running->pgdir);
+
+    if(pte != 0) {
+        set_attribute(pte, _PAGE_DIRTY | _PAGE_ACCESSED);
+        local_flush_tlb_all();
+    } else {
+        handle_other(regs, stval, cause);
+    }
+}
+
+void handle_load_page_fault(regs_context_t *regs, uint64_t stval, uint64_t cause){
+    handle_ldst_pagefault(regs, stval, cause, 0);
+}
+
+void handle_store_page_fault(regs_context_t *regs, uint64_t stval, uint64_t cause){
+    handle_ldst_pagefault(regs, stval, cause, 1);
+}
+
+void handle_ldst_pagefault(regs_context_t *regs, uint64_t stval, uint64_t cause, int load)
+{
+    uint64_t cpu_id = get_current_cpu_id();
+    PTE* pte = find_pte(stval, current_running->pgdir);
+
+    if(pte == 0) { 
+        alloc_page_helper(stval, current_running->pgdir, 1);
+        pte = find_pte(stval, current_running->pgdir);
+        set_attribute(pte, load ? _PAGE_ACCESSED : (_PAGE_ACCESSED|_PAGE_DIRTY));
+        local_flush_tlb_all();
+    } else if(*pte & _PAGE_PRESENT) {
+        set_attribute(pte, load ? _PAGE_ACCESSED : (_PAGE_ACCESSED|_PAGE_DIRTY));
+        local_flush_tlb_all();
+    }else{ //TODO: on disk
+        
+    }
+
 }
 
 void handle_other(regs_context_t *regs, uint64_t stval, uint64_t cause)
@@ -61,8 +119,25 @@ void handle_other(regs_context_t *regs, uint64_t stval, uint64_t cause)
         }
         printk("\n\r");
     }
-    printk("sstatus: 0x%lx sbadaddr: 0x%lx scause: %lu\n\r",
+    printk("sstatus: 0x%lx sbadaddr: 0x%lx scause: %lx\n\r",
            regs->sstatus, regs->sbadaddr, regs->scause);
+    printk("stval: 0x%lx cause: %lx\n\r",
+           stval, cause);
     printk("sepc: 0x%lx\n\r", regs->sepc);
+    // printk("mhartid: 0x%lx\n\r", get_current_cpu_id());
+
+    uintptr_t fp = regs->regs[8], sp = regs->regs[2];
+    printk("[Backtrace]\n\r");
+    printk("  addr: %lx sp: %lx fp: %lx\n\r", regs->regs[1] - 4, sp, fp);
+    // while (fp < USER_STACK_ADDR && fp > USER_STACK_ADDR - PAGE_SIZE) {
+    while (fp > 0x10000) {
+        uintptr_t prev_ra = *(uintptr_t*)(fp-8);
+        uintptr_t prev_fp = *(uintptr_t*)(fp-16);
+
+        printk("  addr: %lx sp: %lx fp: %lx\n\r", prev_ra - 4, fp, prev_fp);
+
+        fp = prev_fp;
+    }
+
     assert(0);
 }

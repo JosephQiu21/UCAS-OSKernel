@@ -57,7 +57,7 @@ extern void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir);
 extern uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir, int mode);
 extern uintptr_t check_page_helper(uintptr_t va, uintptr_t pgdir);
 extern uintptr_t elf_alloc_page_helper(uintptr_t va, uintptr_t pgdir);
-
+extern uintptr_t alloc_page_phys(uintptr_t va, uintptr_t pgdir, uint64_t pa, int mode);
 uintptr_t shm_page_get(int key);
 void shm_page_dt(uintptr_t addr);
 

@@ -115,6 +115,43 @@ uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir, int mode)
     // }
 }
 
+uintptr_t alloc_page_phys(uintptr_t va, uintptr_t pgdir, uint64_t pa, int mode) {
+     va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^
+                    (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = ((vpn2 << (PPN_BITS + PPN_BITS)) | (vpn1 << PPN_BITS)) ^
+                    (va >> NORMAL_PAGE_SHIFT);
+
+    PTE *pgdir_2 = (PTE *)pgdir + vpn2;
+    PTE *pgdir_1 = NULL;
+    PTE *pgdir_0 = NULL;
+
+    if (*pgdir_2 == 0) {
+        // alloc a new third-level page directory
+        set_pfn(pgdir_2, kva2pa(allocPage()) >> NORMAL_PAGE_SHIFT);
+        set_attribute(pgdir_2, (mode << 4 & _PAGE_USER) | _PAGE_PRESENT);
+        clear_pgdir(pa2kva(get_pa(*pgdir_2)));
+    }
+    pgdir_1 = (PTE *)pa2kva(get_pa(*pgdir_2)) + vpn1;
+    if (*pgdir_1 == 0) {
+        //alloc a new second-level page directory
+        set_pfn(pgdir_1, kva2pa(allocPage()) >> NORMAL_PAGE_SHIFT);
+        set_attribute(pgdir_1, (mode<<4 & _PAGE_USER) | _PAGE_PRESENT);
+        clear_pgdir(pa2kva(get_pa(*pgdir_1)));
+    }
+    pgdir_0 = (PTE *)pa2kva(get_pa(*pgdir_1)) + vpn0;
+    if (*pgdir_0 == 0) {
+        ptr_t kva = pa2kva(pa);
+        set_pfn(pgdir_0, kva2pa(kva) >> NORMAL_PAGE_SHIFT);
+        set_attribute(pgdir_0, _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | (mode<<4 & _PAGE_USER) | 
+                                    _PAGE_EXEC | _PAGE_ACCESSED | _PAGE_DIRTY);
+        return kva;
+    } else {
+        return pa2kva(*pgdir_0); //FIXME:??
+    }
+}
+
 uintptr_t elf_alloc_page_helper(uintptr_t va, uintptr_t pgdir){
     return alloc_page_helper(va, pgdir, 1);
 }

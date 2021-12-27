@@ -81,6 +81,9 @@ int sys_mthread_create(void (*start_routine)(void*), void *arg);
 
 #define BINSEM_OP_LOCK 0 // mutex acquire
 #define BINSEM_OP_UNLOCK 1 // mutex release
+long sys_net_recv(uintptr_t addr, size_t length, int num_packet, size_t* frLength);
+void sys_net_send(uintptr_t addr, size_t length);
+void sys_net_irq_mode(int mode);
 
 int binsemget(int key);
 int binsemop(int binsem_id, int op);

@@ -8,6 +8,10 @@
 #include <screen.h>
 #include <csr.h>
 #include <pgtable.h>
+#include <emacps/xil_utils.h>
+#include <emacps/xemacps_example.h>
+#include <plic.h>
+#include <net.h>
 
 handler_t irq_table[IRQC_COUNT];
 handler_t exc_table[EXCC_COUNT];
@@ -17,10 +21,37 @@ void reset_irq_timer()
 {
     screen_reflush();
     check_timer();
+    if (net_poll_mode == INT_MODE) {
+        check_net_queue();
+    }
     // note: use sbi_set_timer
     sbi_set_timer(get_ticks() + time_base / 200);
     // remember to reschedule
     do_scheduler();
+}
+
+void check_net_queue()
+{
+    u32 reg_txsr;
+    u32 reg_rxsr;
+    if (!is_list_empty(&net_recv_queue)) {
+        printk("[DEBUG] Checking recv queue...\n");
+        if (((reg_rxsr = XEmacPs_ReadReg(EmacPsInstance.Config.BaseAddress, XEMACPS_RXSR_OFFSET)) & XEMACPS_RXSR_FRAMERX_MASK) == XEMACPS_RXSR_FRAMERX_MASK) {
+            // Clear rxsr.framerx
+            XEmacPs_WriteReg(EmacPsInstance.Config.BaseAddress, XEMACPS_RXSR_OFFSET, reg_rxsr | XEMACPS_RXSR_FRAMERX_MASK);
+            do_unblock(dequeue(&net_recv_queue));
+        }
+        Xil_DCacheFlushRange(0, 64);
+    }
+    if (!is_list_empty(&net_send_queue)) {
+        printk("[DEBUG] Checking send queue...\n");
+        if (((reg_txsr = XEmacPs_ReadReg(EmacPsInstance.Config.BaseAddress, XEMACPS_TXSR_OFFSET)) & XEMACPS_TXSR_TXCOMPL_MASK) == XEMACPS_TXSR_TXCOMPL_MASK) {
+            // Clear txsr.txcompl
+            XEmacPs_WriteReg(EmacPsInstance.Config.BaseAddress, XEMACPS_TXSR_OFFSET, reg_txsr | XEMACPS_TXSR_TXCOMPL_MASK);
+            do_unblock(dequeue(&net_send_queue));
+        }
+        Xil_DCacheFlushRange(0, 64);
+    }
 }
 
 void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t cause)
@@ -49,6 +80,13 @@ void handle_int(regs_context_t *regs, uint64_t interrupt, uint64_t cause)
     reset_irq_timer();
 }
 
+void handle_irq(regs_context_t *regs, int irq)
+{
+    // TODO: 
+    // handle external irq from network device
+    // let PLIC know that handle_irq has been finished
+}
+
 void init_exception()
 {
     /* initialize irq_table and exc_table */
@@ -57,6 +95,7 @@ void init_exception()
     for (i = 0; i < EXCC_COUNT; i++) exc_table[i] = &handle_other;
     irq_table[IRQC_S_SOFT ] = &sbi_clear_ipi;
     irq_table[IRQC_S_TIMER] = &handle_int;
+    irq_table[IRQC_S_EXT  ] = &plic_handle_irq;
     exc_table[EXC_INST_PAGE_FAULT] = &handle_inst_page_fault;
     exc_table[EXC_LOAD_PAGE_FAULT] = &handle_load_page_fault;
     exc_table[EXC_STORE_PAGE_FAULT] = &handle_store_page_fault;

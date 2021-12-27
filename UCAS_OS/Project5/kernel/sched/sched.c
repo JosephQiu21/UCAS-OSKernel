@@ -30,7 +30,7 @@ pcb_t * volatile current_running;
 
 int match_elf(char *file_name)
 {
-    for (int i = 1; i < 5; i++)
+    for (int i = 1; i < 7; i++)
         if (kstrcmp(file_name, elf_files[i].file_name) == 0)
             return i;
     return -1;
@@ -66,7 +66,7 @@ pid_t do_exec(const char* file_name, int argc, char* argv[], spawn_mode_t mode){
     uint64_t *new_argv = new_pcb -> user_sp;
     for (i = 0; i < argc; i++) {
         *(new_argv + i) = (uint64_t)(new_argv_base + 0x10 * (i + 1));
-        memcpy((char *)(new_pcb -> user_sp + 0x10 * (i + 1)), argv[i], 0x10 * (i + 1));
+        memcpy((char *)(new_pcb -> user_sp + 0x10 * (i + 1)), argv[i], 0x10);
     }
 
     enqueue(&ready_queue, &new_pcb -> list);

@@ -10,14 +10,13 @@
 
 static char blank[] = {"                                             "};
 
-
 int main(int argc, char* argv[])
 {
     int print_location = 1;
     int binsem_id = sys_mutex_get(LOCK2_BINSEM_KEY);
-    if (argc > 0) {
+    if (argc > 1) {
         // maybe we should implement an `atoi` in tinylibc?
-        print_location = (int) atol(argv[0]);
+        print_location = (int) atol(argv[1]);
     }
     while (1)
     {

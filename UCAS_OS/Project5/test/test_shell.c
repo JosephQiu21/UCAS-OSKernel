@@ -100,14 +100,14 @@ void shell_man(char *cmd){
 }
 
 pid_t shell_exec(char *proc, char *arg0, char *arg1, char* arg2){
-    int argc = 0;
+    int argc = 1;
     if (strlen(arg0) != 0)
         argc ++;
     if (strlen(arg1) != 0)
         argc ++;
     if (strlen(arg2) != 0)
         argc ++;
-    char *argv[] = {arg0, arg1, arg2};
+    char *argv[] = {proc, arg0, arg1, arg2};
     pid_t pid = sys_exec(proc, argc, argv, 1);
     if (pid > 0)
         printf("> Task execution succeed! PID: %d, MODE: %s\n", pid, "AUTO_CLEANUP_ON_EXIT");
@@ -175,7 +175,6 @@ void parse(char *cmd){
     }
 
     else {
-        printf("> [DEBUG] arg[1]: %s, arg[2]: %s, arg[3]: %s, arg[4]: %s\n", arg[1], arg[2], arg[3], arg[4]);
         cmd_table[cmd_id].func(arg[1], arg[2], arg[3], arg[4]);
     }
 

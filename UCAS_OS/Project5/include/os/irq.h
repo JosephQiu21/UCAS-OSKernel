@@ -82,7 +82,7 @@ extern void handle_load_page_fault(regs_context_t *regs, uint64_t interrupt, uin
 extern void handle_store_page_fault(regs_context_t *regs, uint64_t interrupt, uint64_t cause);
 extern void handle_ldst_pagefault(regs_context_t *regs, uint64_t stval, uint64_t cause, int load);
 
-
+extern void check_net_queue(void);
 extern void enable_interrupt(void);
 extern void disable_interrupt(void);
 extern void enable_preempt(void);

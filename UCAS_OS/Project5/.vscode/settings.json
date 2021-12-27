@@ -19,6 +19,8 @@
         "stdio.h": "c",
         "context.h": "c",
         "pgtable.h": "c",
-        "mthread.h": "c"
+        "mthread.h": "c",
+        "xemacps_example.h": "c",
+        "irq.h": "c"
     }
 }

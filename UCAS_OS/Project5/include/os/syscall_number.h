@@ -77,4 +77,10 @@
 #define SYSCALL_LS 49
 #define SYSCALL_MTHREAD_CREATE 50
 
+#define SYSCALL_NET_RECV 52
+#define SYSCALL_NET_SEND 53
+#define SYSCALL_NET_IRQ_MODE 54
+
+
+
 #endif
