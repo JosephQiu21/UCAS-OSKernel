@@ -1,0 +1,11 @@
+--- libs/printk.c	2021-09-29 17:20:26.969530105 +0800
++++ libs/printk.c	2020-10-20 20:23:01.000000000 +0800
+@@ -241,7 +252,7 @@ int vprintk(const char *fmt, va_list _va
+     buff[ret] = '\0';
+ 
+     disable_preempt();
+-    port_write(buff);
++    output(buff);
+     for (int i = 0; i < ret; ++i) {
+         if (buff[i] == '\n') {
+             current_running->cursor_y++;

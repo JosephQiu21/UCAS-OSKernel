@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "cstdio": "c",
+        "syscall.h": "c",
+        "unistd.h": "c",
+        "os.h": "c",
+        "test3.h": "c",
+        "lock.h": "c",
+        "syscall_number.h": "c",
+        "mm.h": "c",
+        "type.h": "c",
+        "elf.h": "c",
+        "sched.h": "c",
+        "list.h": "c",
+        "screen.h": "c",
+        "typeinfo": "cpp",
+        "assert.h": "c",
+        "user_programs.h": "c",
+        "stdio.h": "c",
+        "context.h": "c",
+        "pgtable.h": "c",
+        "mthread.h": "c",
+        "xemacps_example.h": "c",
+        "irq.h": "c"
+    }
+}
